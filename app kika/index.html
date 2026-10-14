@@ -1,0 +1,1154 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="O meu plano">
+<meta name="theme-color" content="#F5F2EC" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121413" media="(prefers-color-scheme: dark)">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<title>O meu plano</title>
+<style>
+:root{
+  --bg:#F5F2EC; --card:#FFFFFF; --ink:#1F2421; --muted:#6B706C; --line:#E4DFD6; --chip:#F0ECE4;
+  --food:#B9502F; --food-soft:#F7E4DC; --run:#237A5C; --run-soft:#DDEFE7; --walk:#2F64A0; --walk-soft:#DFE9F5;
+  --warn:#9A6200; --warn-soft:#FBF0D9; --danger:#B42318; --danger-soft:#FBE3E0;
+  --radius:16px; --tabh:64px;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#121413; --card:#1C1F1D; --ink:#ECEFEC; --muted:#9AA19C; --line:#2C302D; --chip:#262A27;
+    --food:#E8825F; --food-soft:#3A2620; --run:#4FBF95; --run-soft:#1C3329; --walk:#7BAEE3; --walk-soft:#1D2B3B;
+    --warn:#E6B04A; --warn-soft:#3A2F17; --danger:#F07A6E; --danger-soft:#3E1F1C;
+  }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:18px/1.45 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+button,input,textarea,select{font:inherit;color:inherit}
+header.top{position:sticky;top:0;z-index:5;background:var(--bg);padding:calc(env(safe-area-inset-top) + 10px) 16px 8px;border-bottom:1px solid var(--line)}
+header.top h1{margin:0;font-size:22px;letter-spacing:-.01em}
+header.top .sub{color:var(--muted);font-size:15px}
+main{padding:12px 16px calc(var(--tabh) + env(safe-area-inset-bottom) + 24px);max-width:640px;margin:0 auto}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:10;display:grid;grid-template-columns:repeat(4,1fr);background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+nav.tabs button{height:var(--tabh);border:0;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:13px;color:var(--muted)}
+nav.tabs button svg{width:26px;height:26px}
+nav.tabs button.on{color:var(--ink);font-weight:600}
+nav.tabs button.on svg{color:var(--food)}
+nav.tabs button[data-v="corrida"].on svg{color:var(--run)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px;margin:0 0 12px}
+.card h2{font-size:19px;margin:0 0 8px}
+.card h3{font-size:16px;margin:12px 0 6px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.row{display:flex;align-items:center;gap:8px}
+.between{justify-content:space-between}
+.muted{color:var(--muted)}
+.small{font-size:15px}
+.tiny{font-size:13px}
+.big{font-size:28px;font-weight:700;letter-spacing:-.02em}
+.btn{min-height:50px;border-radius:14px;border:1px solid var(--line);background:var(--chip);padding:10px 16px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn.full{width:100%}
+.btn.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn.run{background:var(--run);border-color:var(--run);color:#fff}
+.btn.food{background:var(--food);border-color:var(--food);color:#fff}
+.btn.ghost{background:none}
+.btn.danger{color:var(--danger)}
+.btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.btns.three{grid-template-columns:1.4fr 1fr 1fr}
+.btns.one{grid-template-columns:1fr}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{min-height:42px;border-radius:999px;border:1px solid var(--line);background:var(--chip);padding:8px 13px;font-size:16px;text-align:left}
+.chip .k{color:var(--muted);font-size:14px;margin-left:4px}
+.chip.sel{background:var(--food-soft);border-color:var(--food);color:var(--ink);font-weight:600}
+.chip.sel .k{color:var(--food)}
+.chip.add{background:none;border-style:dashed;color:var(--muted)}
+.runctx .chip.sel{background:var(--run-soft);border-color:var(--run)}
+.runctx .chip.sel .k{color:var(--run)}
+.chip.num{min-width:46px;text-align:center;justify-content:center}
+.grp{margin:10px 0 0}
+.grp .gl{font-size:14px;color:var(--muted);margin-bottom:4px}
+.note{font-size:15px;color:var(--muted);margin-top:8px}
+.meal.done{border-color:var(--run)}
+.meal.skip{border-color:var(--warn)}
+.meal .head{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.meal .head h2{margin:0}
+.meal .kc{font-weight:700;color:var(--food);white-space:nowrap}
+.status{font-size:15px;margin-top:6px}
+.tag{display:inline-block;font-size:13px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--chip)}
+.tag.ok{background:var(--run-soft);color:var(--run)}
+.tag.warn{background:var(--warn-soft);color:var(--warn)}
+.banner{border-radius:var(--radius);padding:12px 14px;margin:0 0 12px;font-size:16px;border:1px solid}
+.banner.warn{background:var(--warn-soft);border-color:var(--warn)}
+.banner.danger{background:var(--danger-soft);border-color:var(--danger)}
+.banner.info{background:var(--walk-soft);border-color:var(--walk)}
+.banner b{display:block;margin-bottom:2px}
+.banner .btn{min-height:42px;margin-top:8px;font-size:16px}
+.seg{display:grid;grid-template-columns:1fr 1fr;background:var(--chip);border-radius:14px;padding:4px;gap:4px;border:1px solid var(--line)}
+.seg button{min-height:42px;border:0;border-radius:10px;background:none;font-weight:600;color:var(--muted)}
+.seg button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.bar{height:10px;border-radius:99px;background:var(--chip);overflow:hidden;margin-top:8px}
+.bar>i{display:block;height:100%;background:var(--food);border-radius:99px}
+.bar.run>i{background:var(--run)}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kv>div{background:var(--chip);border-radius:12px;padding:10px}
+.kv .l{font-size:13px;color:var(--muted)}
+.kv .v{font-size:20px;font-weight:700}
+label.f{display:block;font-size:15px;color:var(--muted);margin:10px 0 4px}
+input.in,textarea.in{width:100%;min-height:48px;border-radius:12px;border:1px solid var(--line);background:var(--bg);padding:10px 12px;font-size:18px}
+textarea.in{min-height:80px}
+.list{margin:0;padding:0;list-style:none}
+.list li{padding:8px 0;border-bottom:1px solid var(--line);font-size:16px}
+.list li:last-child{border-bottom:0}
+.supl{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--line);width:100%;background:none;border-left:0;border-right:0;border-top:0;text-align:left}
+.supl:last-child{border-bottom:0}
+.box{flex:0 0 28px;height:28px;border-radius:8px;border:2px solid var(--line);display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff}
+.supl.on .box{background:var(--run);border-color:var(--run)}
+.supl .t{font-weight:600;font-size:16px}
+.supl .d{font-size:14px;color:var(--muted)}
+.water{display:flex;align-items:center;gap:10px}
+.water .btn{min-width:56px;font-size:22px}
+.cups{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.cups i{width:18px;height:24px;border-radius:3px 3px 6px 6px;border:2px solid var(--walk);display:block}
+.cups i.f{background:var(--walk)}
+table.plan{width:100%;border-collapse:collapse;font-size:15px}
+table.plan td,table.plan th{padding:8px 6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+table.plan th{color:var(--muted);font-weight:600;font-size:13px}
+table.plan tr.cur td{background:var(--run-soft);font-weight:700}
+table.plan tr.past td{color:var(--muted)}
+.zone{display:flex;gap:10px;align-items:flex-start;padding:8px 0}
+.zone .dot{flex:0 0 14px;height:14px;border-radius:50%;margin-top:5px}
+pre.rep{white-space:pre-wrap;font:14px/1.45 ui-monospace,Menlo,monospace;background:var(--chip);border-radius:12px;padding:12px;max-height:340px;overflow:auto;margin:10px 0 0}
+details>summary{cursor:pointer;font-weight:600;min-height:44px;display:flex;align-items:center}
+.plantext p{margin:6px 0}
+.plantext ul{margin:4px 0 8px;padding-left:20px}
+.plantext li{margin:2px 0}
+/* sheet */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:30;display:none}
+.scrim.on{display:block}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:31;background:var(--card);border-radius:20px 20px 0 0;padding:8px 16px calc(env(safe-area-inset-bottom) + 16px);max-height:88vh;overflow:auto;transform:translateY(105%);transition:transform .22s ease;max-width:640px;margin:0 auto}
+.sheet.on{transform:none}
+.sheet .grab{width:40px;height:5px;border-radius:9px;background:var(--line);margin:4px auto 10px}
+.sheet h2{margin:0 0 6px;font-size:20px}
+/* timer */
+.timer{position:fixed;inset:0;z-index:40;background:var(--bg);display:none;flex-direction:column;padding:calc(env(safe-area-inset-top) + 16px) 16px calc(env(safe-area-inset-bottom) + 16px)}
+.timer.on{display:flex}
+.timer .phase{font-size:44px;font-weight:800;letter-spacing:.02em;text-align:center;margin-top:12px}
+.timer .clock{font-size:96px;font-weight:800;text-align:center;font-variant-numeric:tabular-nums;letter-spacing:-.03em;line-height:1.1}
+.timer .info{text-align:center;color:var(--muted);font-size:18px}
+.timer.r{background:var(--run-soft)} .timer.r .phase{color:var(--run)}
+.timer.w{background:var(--walk-soft)} .timer.w .phase{color:var(--walk)}
+.timer .tip{margin:14px auto 0;max-width:420px;text-align:center;font-size:17px;padding:10px 14px;border-radius:14px;background:var(--card);border:1px solid var(--line)}
+.timer .grow{flex:1}
+.timer .ctl{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.toast{position:fixed;left:50%;bottom:calc(var(--tabh) + env(safe-area-inset-bottom) + 14px);transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:16px;z-index:50;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw;text-align:center}
+.toast.on{opacity:1}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<header class="top"><h1 id="ttl">Hoje</h1><div class="sub" id="subttl"></div></header>
+<main id="view"></main>
+<nav class="tabs">
+  <button data-a="tab" data-v="hoje"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 11h16M6 11v7a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-7M9 7c0-2 1.5-3 3-3s3 1 3 3"/></svg>Hoje</button>
+  <button data-a="tab" data-v="corrida"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="14" cy="4.5" r="2"/><path d="M8 21l3-6 3 2v4M7 12l3-3 4 1 3 3M10 9l1 6"/></svg>Corrida</button>
+  <button data-a="tab" data-v="semana"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>Semana</button>
+  <button data-a="tab" data-v="plano"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 3h9l3 3v15H6z"/><path d="M9 10h6M9 14h6M9 18h4"/></svg>Plano</button>
+</nav>
+<div class="scrim" id="scrim" data-a="closeSheet"></div>
+<div class="sheet" id="sheet"></div>
+<div class="timer" id="timer"></div>
+<div class="toast" id="toast"></div>
+<input type="file" id="fileIn" accept="application/json,.json" class="hidden">
+
+<script>
+'use strict';
+/* =====================================================================
+   Versão e armazenamento — a CHAVE é fixa: nunca mudar entre versões.
+   Mudanças de estrutura fazem-se em migrate(), sem apagar dados.
+   ===================================================================== */
+const APP_VERSION = '1.1.0';
+const STORE_KEY = 'plano.dados.v1';
+const SCHEMA = 1;
+const SPEED = Math.max(1, Number(new URLSearchParams(location.search).get('speed')) || 1); // só para testes
+
+/* ---------- utilitários ---------- */
+const pad = n => String(n).padStart(2,'0');
+const iso = d => d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const today = () => iso(new Date());
+const parseISO = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y,m-1,d); };
+const addDays = (s,n) => { const d = parseISO(s); d.setDate(d.getDate()+n); return iso(d); };
+const mondayOf = s => { const d = parseISO(s); d.setDate(d.getDate()-((d.getDay()+6)%7)); return iso(d); };
+const MESES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+const DIAS = ['domingo','segunda','terça','quarta','quinta','sexta','sábado'];
+const DIAS3 = ['dom','seg','ter','qua','qui','sex','sáb'];
+const fmtD = s => { const d = parseISO(s); return d.getDate()+' '+MESES[d.getMonth()]; };
+const fmtDW = s => { const d = parseISO(s); return DIAS3[d.getDay()]+' '+d.getDate(); };
+const num = v => { const x = parseFloat(String(v??'').replace(',','.')); return isFinite(x) ? x : null; };
+const f1 = x => x==null ? '—' : (Math.round(x*10)/10).toFixed(1).replace('.',',');
+const avg = a => { const b = a.filter(x => x!=null && isFinite(x)); return b.length ? b.reduce((s,x)=>s+x,0)/b.length : null; };
+const esc = s => String(s??'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const $ = id => document.getElementById(id);
+const mmss = sec => { sec = Math.max(0, Math.ceil(sec)); return Math.floor(sec/60)+':'+pad(sec%60); };
+const minTxt = m => { const s = Math.round(m*60); const mm = Math.floor(s/60), ss = s%60; return ss ? `${mm}′${pad(ss)}` : `${mm}′`; };
+
+/* =====================================================================
+   PLANO ALIMENTAR — transcrito do PDF do treinador (não alterar quantidades).
+   kcal = estimativas calculadas por nós (não vêm do plano), alimento cru:
+   pão massa mãe 239/100g · goma de tapioca hidratada 230 · ovo 143 · clara 52
+   papaia 43 · abacaxi 50 · kiwi gold 63 · Alpro Coco Natural 78 · whey isolada 375
+   bolacha de arroz 387 · compota 100% fruta 160 · mel 304 · arroz basmati 355
+   farinha de arroz 366 · batata 77 · banana média 105 · chocolate 85% 580 (quadrado 10 g)
+   frango 119 · peru 114 · pescada 74 · robalo 97 · dourada 110 · linguado 86
+   camarão 85 · lulas 92 · polvo 82 · salmão de aquacultura 208 · azeite 8 kcal/ml
+   ===================================================================== */
+const proteinas = salmao => {
+  const a = [
+    {id:'frango',  label:'120 g peito de frango', kcal:143},
+    {id:'peru',    label:'120 g peito de peru',   kcal:137},
+    {id:'pescada', label:'150 g pescada',         kcal:111},
+    {id:'robalo',  label:'150 g robalo',          kcal:146},
+    {id:'dourada', label:'150 g dourada',         kcal:165},
+    {id:'linguado',label:'150 g linguado',        kcal:129},
+    {id:'camarao', label:'150 g camarão',         kcal:128},
+    {id:'lulas',   label:'150 g lulas',           kcal:138},
+    {id:'polvo',   label:'150 g polvo',           kcal:123},
+  ];
+  if (salmao) a.push({id:'salmao', label:'120 g salmão (só nos treinos 1 e 3 de inferiores)', kcal:250});
+  return a;
+};
+const FRUTA50 = [['maca','maçã',96],['pera','pera',88],['banana','banana',56],['laranja','laranja',106],['tangerina','tangerina',94],
+  ['kiwi','kiwi gold',80],['morangos','morangos',156],['mirtilos','mirtilos',88],['papaia','papaia',116],['abacaxi','abacaxi',100],
+  ['uvas','uvas',72],['manga','manga',83]].map(([id,n,g]) => ({id:'f50_'+id, label:`${g} g ${n}`, kcal:50}));
+
+const PLANO = {
+  treino: { nome:'Dia de treino', meals:[
+    { id:'m1', nome:'1ª refeição', groups:[
+      {id:'hc', nome:'Pão ou tapioca', opts:[{id:'pao',label:'75 g pão Rustik Bakery massa mãe',kcal:179},{id:'tapioca',label:'50 g tapioca',kcal:115}]},
+      {id:'ovos', nome:'Ovos', opts:[{id:'ovos',label:'2 ovos + 2 claras',kcal:177}]},
+      {id:'fruta', nome:'Fruta', opts:[{id:'papaia',label:'100 g papaia',kcal:43},{id:'abacaxi',label:'100 g abacaxi',kcal:50},{id:'kiwi',label:'100 g kiwi gold',kcal:63}]},
+    ], notas:['0,5 g sal'] },
+    { id:'m2', nome:'2ª refeição', groups:[
+      {id:'iog', nome:'Alpro + whey', opts:[{id:'alpro_whey',label:'75 g Alpro Coco Natural + 10 g whey isolada',kcal:97}]},
+      {id:'bol', nome:'Bolachas de arroz', opts:[{id:'bol_comp',label:'2 bolachas de arroz + 15 g compota 100% fruta',kcal:82},{id:'bol_mel',label:'2 bolachas de arroz + 10 g mel',kcal:88}]},
+    ] },
+    { id:'m3', nome:'3ª refeição', groups:[
+      {id:'prot', nome:'Proteína', opts:proteinas(false)},
+      {id:'arroz', nome:'Arroz', opts:[{id:'arroz',label:'50 g arroz basmati',kcal:178}]},
+      {id:'azeite', nome:'Azeite', opts:[{id:'azeite',label:'1 colher de chá (5 ml) azeite extra virgem',kcal:40}]},
+    ], hort:'100 g pepino + alface + cenoura (não é obrigatório usar os 3)', notas:['1 g sal','1 pacote de chá de menta'] },
+    { id:'m4', nome:'4ª refeição · pré-treino', sub:'60–80 min antes do treino', groups:[
+      {id:'farinha', nome:'Farinha de arroz', opts:[{id:'farinha',label:'50 g farinha de arroz',kcal:183}]},
+      {id:'fruta', nome:'Fruta', opts:[{id:'banana',label:'1 banana',kcal:105}]},
+      {id:'iog', nome:'Alpro', opts:[{id:'alpro',label:'75 g Alpro Coco Natural (+ água se necessário)',kcal:59}]},
+      {id:'choc', nome:'Chocolate', opts:[{id:'choc',label:'1 quadrado de chocolate preto 70–85%',kcal:58}]},
+      {id:'whey', nome:'Whey', opts:[{id:'whey',label:'30 g whey isolada',kcal:113}]},
+    ], notas:['0,5 g sal','5 g creatina'] },
+    { id:'m5', nome:'5ª refeição · pós-treino', groups:[
+      {id:'prot', nome:'Proteína', opts:proteinas(true)},
+      {id:'hc', nome:'Arroz ou batata', opts:[{id:'arroz',label:'70 g arroz basmati',kcal:249},{id:'batata',label:'340 g batata',kcal:262}]},
+      {id:'fruta', nome:'Fruta (50 kcal à escolha)', opts:FRUTA50},
+    ], hort:'100 g feijão-verde ou curgete', notas:['1 g sal'] },
+  ]},
+  descanso: { nome:'Dia de descanso', meals:[
+    { id:'m1', nome:'1ª refeição', groups:[
+      {id:'hc', nome:'Pão ou tapioca', opts:[{id:'pao',label:'50 g pão Rustik Bakery massa mãe',kcal:120},{id:'tapioca',label:'30 g tapioca',kcal:69}]},
+      {id:'ovos', nome:'Ovos', opts:[{id:'ovos',label:'2 ovos + 2 claras',kcal:177}]},
+      {id:'fruta', nome:'Fruta', opts:[{id:'papaia',label:'100 g papaia',kcal:43},{id:'abacaxi',label:'100 g abacaxi',kcal:50},{id:'kiwi',label:'100 g kiwi gold',kcal:63}]},
+    ], notas:['0,5 g sal'] },
+    { id:'m2', nome:'2ª refeição', groups:[
+      {id:'iog', nome:'Alpro + whey', opts:[{id:'alpro_whey',label:'75 g Alpro Coco Natural + 10 g whey isolada',kcal:97}]},
+      {id:'bol', nome:'Bolachas de arroz', opts:[{id:'bol_comp',label:'2 bolachas de arroz + 15 g compota 100% fruta',kcal:82},{id:'bol_mel',label:'2 bolachas de arroz + 10 g mel',kcal:88}]},
+    ] },
+    { id:'m3', nome:'3ª refeição', groups:[
+      {id:'prot', nome:'Proteína', opts:proteinas(false)},
+      {id:'arroz', nome:'Arroz', opts:[{id:'arroz',label:'70 g arroz basmati',kcal:249}]},
+      {id:'azeite', nome:'Azeite', opts:[{id:'azeite',label:'1 colher de chá (5 ml) azeite extra virgem',kcal:40}]},
+    ], hort:'100 g pepino + alface + cenoura (não é obrigatório usar os 3)', notas:['1 g sal','1 pacote de chá de menta'] },
+    { id:'m4', nome:'4ª refeição', groups:[
+      {id:'farinha', nome:'Farinha de arroz', opts:[{id:'farinha',label:'30 g farinha de arroz',kcal:110}]},
+      {id:'fruta', nome:'Fruta (50 kcal à escolha)', opts:FRUTA50},
+      {id:'iog', nome:'Alpro', opts:[{id:'alpro',label:'75 g Alpro Coco Natural (+ água se necessário)',kcal:59}]},
+      {id:'choc', nome:'Chocolate', opts:[{id:'choc',label:'1 quadrado de chocolate preto 70–85%',kcal:58}]},
+      {id:'whey', nome:'Whey', opts:[{id:'whey',label:'30 g whey isolada',kcal:113}]},
+    ], notas:['0,5 g sal','5 g creatina'] },
+    { id:'m5', nome:'5ª refeição', groups:[
+      {id:'prot', nome:'Proteína', opts:proteinas(false)},
+      {id:'hc', nome:'Arroz ou batata', opts:[{id:'arroz',label:'30 g arroz basmati',kcal:107},{id:'batata',label:'130 g batata',kcal:100}]},
+    ], hort:'100 g feijão-verde ou curgete', notas:['1 g sal'] },
+  ]},
+};
+const mealPlanKcal = m => m.groups.reduce((s,g) => s + g.opts[0].kcal, 0);
+const PLAN_KCAL = t => PLANO[t].meals.reduce((s,m) => s + mealPlanKcal(m), 0);
+
+/* Suplementos (agrupados por momento do dia) */
+const SUPL = {
+  treino: [
+    {id:'jejum', t:'Em jejum', d:'10–15 min antes da 1ª refeição: 1 probiótico + 1 Gzyme + 1 Digezyme'},
+    {id:'r1', t:'Com a 1ª refeição', d:'Vit. D3 4000 UI + K2 200 mcg · Ómega 3 2 g · 1 rhodiola'},
+    {id:'r3', t:'Com a 3ª refeição', d:'1 rhodiola · 1 chá de menta'},
+    {id:'r4', t:'4ª refeição', d:'10–15 min antes: Gzyme + Digezyme · com a refeição: 5 g creatina'},
+    {id:'pre', t:'15 min antes do treino', d:'5 g citrulina · 2 g taurina'},
+    {id:'intra', t:'Durante o treino', d:'1 dose de eletrólitos'},
+    {id:'deitar', t:'20 min antes de deitar', d:'Chá de camomila · 2 cápsulas de magnésio bisglicinato'},
+  ],
+  descanso: [
+    {id:'jejum', t:'Em jejum', d:'10–15 min antes da 1ª refeição: 1 probiótico + 1 Gzyme + 1 Digezyme'},
+    {id:'r1', t:'Com a 1ª refeição', d:'Vit. D3 4000 UI + K2 200 mcg · Ómega 3 2 g · 1 rhodiola · 2 g taurina'},
+    {id:'r3', t:'Com a 3ª refeição', d:'1 rhodiola · 1 chá de menta'},
+    {id:'r4', t:'4ª refeição', d:'10–15 min antes: Gzyme + Digezyme · com a refeição: 5 g creatina'},
+    {id:'deitar', t:'20 min antes de deitar', d:'Chá de camomila · 2 cápsulas de magnésio bisglicinato'},
+  ],
+};
+const AGUA_META = 12; // copos de 250 ml = 3 L
+
+const MOTIVOS = ['Fome','Social','Sem tempo','Cansaço','Vontade de doce','Outro'];
+const MOTIVOS_TROCA = ['Não tinha','Preferência','Fome','Social','Sem tempo','Vontade de doce','Outro'];
+const MOTIVOS_CORRIDA = ['Sem tempo','Cansaço','Dor','Chuva / tempo','Doente','Outro'];
+const DOR_LOCAIS = ['Joelho','Canela','Gémeo','Tornozelo','Pé','Anca','Coxa','Costas','Outro'];
+const CUSTO = {bem:'Correu bem', deu:'Custou mas deu', muito:'Custou muito'};
+
+/* =====================================================================
+   PLANO DE CORRIDA — 2 sessões/semana, 5′ a andar antes e depois.
+   Passos grandes duram 2 semanas (5–6 e 9–10).
+   ===================================================================== */
+const reps = (n,r,w) => { const a=[]; for (let i=0;i<n;i++){ a.push(['r',r]); if (i<n-1) a.push(['w',w]); } return a; };
+const FOCO = {A:'Trote muito lento, passada curta: quase à velocidade de andar rápido. O objetivo é aguentar os blocos, não ir depressa.',B:'O mesmo ritmo lento das semanas anteriores. Os blocos ficam mais longos, a velocidade não muda.',C:'Blocos mais longos: começa cada um ainda mais devagar. Se no fim do bloco já só dizes frases curtas, abranda no seguinte.',D:'Blocos de 12′: ritmo mais lento do que nos blocos curtos. Tens de manter a conversa do princípio ao fim.',E:'Na segunda parte não aceleres. Se custar, abranda — continuar a correr devagar vale mais do que correr depressa.',F:'Corrida contínua: os primeiros 5′ mais devagar do que achas necessário. Conversa possível o tempo todo; nada de acelerar no fim.'};
+const STEPS = [
+  {txt:'8 × (1′ correr + 2′ andar)', seg:reps(8,1,2), foco:FOCO.A, esf:'3–4'},
+  {txt:'7 × (1′30 correr + 2′ andar)', seg:reps(7,1.5,2), foco:FOCO.A, esf:'3–4'},
+  {txt:'6 × (2′ correr + 2′ andar)', seg:reps(6,2,2), foco:FOCO.B, esf:'3–4'},
+  {txt:'5 × (3′ correr + 2′ andar)', seg:reps(5,3,2), foco:FOCO.B, esf:'3–4'},
+  {txt:'4 × (5′ correr + 2′ andar)', seg:reps(4,5,2), nota:'salto maior: 2 semanas', foco:FOCO.C, esf:'4 (máx. 5 no fim do bloco)'},
+  {txt:'4 × (5′ correr + 2′ andar)', seg:reps(4,5,2), nota:'repete para consolidar', foco:FOCO.C, esf:'4 (máx. 5 no fim do bloco)'},
+  {txt:'3 × (7′ correr + 2′ andar)', seg:reps(3,7,2), foco:FOCO.C, esf:'4 (máx. 5 no fim do bloco)'},
+  {txt:'3 × (8′ correr + 2′ andar)', seg:reps(3,8,2), foco:FOCO.C, esf:'4 (máx. 5 no fim do bloco)'},
+  {txt:'2 × (12′ correr + 2′ andar)', seg:reps(2,12,2), nota:'salto maior: 2 semanas', foco:FOCO.D, esf:'4 (nunca acima de 5)'},
+  {txt:'2 × (12′ correr + 2′ andar)', seg:reps(2,12,2), nota:'repete para consolidar', foco:FOCO.D, esf:'4 (nunca acima de 5)'},
+  {txt:'15′ correr + 2′ andar + 10′ correr', seg:[['r',15],['w',2],['r',10]], foco:FOCO.E, esf:'4 (nunca acima de 5)'},
+  {txt:'20′ correr + 2′ andar + 8′ correr', seg:[['r',20],['w',2],['r',8]], foco:FOCO.E, esf:'4 (nunca acima de 5)'},
+  {txt:'25′ a correr seguidos', seg:[['r',25]], foco:FOCO.F, esf:'4–5'},
+  {txt:'30′ a correr seguidos', seg:[['r',30]], foco:FOCO.F, esf:'4–5'},
+];
+const COMO = [
+  ['Aquecimento (5′ a andar)', 'Começa a passo normal e acelera nos últimos 2′ até andares rápido.'],
+  ['Blocos a correr', 'Fácil: consegues dizer frases completas. Passada curta, braços soltos, olhar em frente.'],
+  ['Pausas a andar', 'Passo vivo, sem parar. Serve para recuperar o fôlego antes do bloco seguinte.'],
+  ['Retorno à calma (5′ a andar)', 'Abranda aos poucos até um passo calmo.'],
+];
+const runMin = st => st.seg.filter(s=>s[0]==='r').reduce((a,s)=>a+s[1],0);
+const totalMin = st => st.seg.reduce((a,s)=>a+s[1],0) + 10;
+
+/* ---------- dados ---------- */
+let STORAGE_OK = true;
+function defaultData(){
+  return { schema:SCHEMA, createdAt:today(), days:{}, runs:[], walks:[],
+    run:{ week:1, startMonday:null, evaluatedThrough:null, history:[], completed:false },
+    prefs:{ last:{}, coachAck:false, healthAck:false, introSeen:false },
+    lastBackup:null };
+}
+function migrate(d){
+  const b = defaultData();
+  if (!d || typeof d !== 'object') return b;
+  const out = Object.assign(b, d);
+  out.prefs = Object.assign(defaultData().prefs, d.prefs||{});
+  out.run = Object.assign(defaultData().run, d.run||{});
+  out.days = d.days || {}; out.runs = d.runs || []; out.walks = d.walks || [];
+  // Futuras versões: if (out.schema < 2) { ...converter sem apagar...; out.schema = 2; }
+  out.schema = Math.max(out.schema||1, SCHEMA);
+  return out;
+}
+function load(){
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    localStorage.setItem('plano.teste', '1'); localStorage.removeItem('plano.teste');
+    return raw ? migrate(JSON.parse(raw)) : defaultData();
+  } catch(e){ STORAGE_OK = false; return defaultData(); }
+}
+let DB = load();
+function save(){
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(DB)); STORAGE_OK = true; }
+  catch(e){ STORAGE_OK = false; toast('Atenção: não consegui guardar os dados neste navegador.'); }
+}
+try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch(e){}
+
+const dayR = date => DB.days[date] || { type:'treino', checkin:null, meals:{}, extras:[], supl:{}, agua:0 };
+const dayW = date => { if (!DB.days[date]) DB.days[date] = { type:'treino', checkin:null, meals:{}, extras:[], supl:{}, agua:0 }; return DB.days[date]; };
+const runToday = date => DB.runs.some(r => r.date===date && r.done);
+const dayType = date => runToday(date) ? 'treino' : dayR(date).type;
+
+function dayKcal(date){
+  const d = dayR(date); let s = 0;
+  Object.values(d.meals||{}).forEach(m => { if (m && (m.status==='feito'||m.status==='outra')) s += m.kcal||0; });
+  (d.extras||[]).forEach(x => s += x.kcal||0);
+  return s;
+}
+const mealsLogged = date => { const d = dayR(date); return PLANO[dayType(date)].meals.filter(m => d.meals[m.id] && d.meals[m.id].status).length; };
+
+/* ---------- estado de UI ---------- */
+let VIEW = 'hoje';
+let PLAN_VIEW = 'treino';
+let WEEK_SEL = mondayOf(today());
+const DRAFT = {};      // escolhas em curso por refeição
+const EDIT = new Set();
+let SHEET = null;
+
+/* =====================================================================
+   CORRIDA — avaliação semanal (segunda a domingo)
+   ===================================================================== */
+const doneRuns = () => DB.runs.filter(r => r.done).sort((a,b) => (a.date+a.t).localeCompare(b.date+b.t));
+function painPair(){
+  const d = doneRuns(); if (d.length < 2) return null;
+  const a = d[d.length-2], b = d[d.length-1];
+  if ((a.dor||0) >= 2 && (b.dor||0) >= 2 && a.dorLocal && a.dorLocal === b.dorLocal) return b;
+  return null;
+}
+const painStopThisWeek = () => { const p = painPair(); return p && mondayOf(p.date) === mondayOf(today()); };
+function painInWeek(mon){
+  const d = doneRuns();
+  for (let i=1;i<d.length;i++){ const a=d[i-1], b=d[i];
+    if (mondayOf(b.date)===mon && (a.dor||0)>=2 && (b.dor||0)>=2 && a.dorLocal && a.dorLocal===b.dorLocal) return true; }
+  return false;
+}
+function weekVerdict(mon){
+  const s = DB.runs.filter(r => r.done && mondayOf(r.date) === mon);
+  if (s.length < 2) return s.length === 0 ? 'nenhuma sessão feita' : 'só 1 sessão feita';
+  if (s.some(r => r.custo === 'muito')) return 'uma sessão custou muito';
+  const e = avg(s.map(r => r.esforco)); if (e != null && e >= 7) return 'esforço médio ≥ 7';
+  if (painInWeek(mon)) return 'dor no mesmo sítio em 2 sessões seguidas';
+  return null;
+}
+function evaluateWeeks(){
+  const R = DB.run; if (!R.startMonday) return;
+  const cur = mondayOf(today());
+  let m = R.evaluatedThrough ? addDays(R.evaluatedThrough, 7) : R.startMonday;
+  let changed = false;
+  while (m < cur){
+    const reason = weekVerdict(m), from = R.week;
+    if (!reason){ if (R.week < STEPS.length) R.week++; else R.completed = true; }
+    R.history.push({ monday:m, week:from, done:DB.runs.filter(r=>r.done && mondayOf(r.date)===m).length, decision: reason ? 'repete' : 'avança', reason });
+    R.evaluatedThrough = m; m = addDays(m, 7); changed = true;
+  }
+  if (changed) save();
+}
+const curStep = () => STEPS[DB.run.week-1];
+
+/* =====================================================================
+   ALERTAS
+   ===================================================================== */
+function weekDates(mon){ return [0,1,2,3,4,5,6].map(i => addDays(mon,i)); }
+function energiaSemana(mon){ return weekDates(mon).map(d => dayR(d).checkin && dayR(d).checkin.energia).filter(x => x!=null); }
+function alertsFor(mon){
+  const A = [];
+  const en = energiaSemana(mon);
+  if (en.filter(x => x <= 2).length >= 3) A.push({lvl:'warn', t:'Energia baixa em 3 dias desta semana', d:'Fala com o teu treinador antes de continuares a progredir.'});
+  const prev = energiaSemana(addDays(mon,-7)), aNow = avg(en), aPrev = avg(prev);
+  if (en.length >= 3 && prev.length >= 3 && aNow <= 2.5 && aPrev <= 2.5) A.push({lvl:'warn', t:'Cansaço persistente (2 semanas com energia média ≤ 2,5)', d:'Fala com o teu treinador.'});
+  const d = doneRuns().filter(r => r.date <= addDays(mon,6));
+  if (d.length >= 2){ const a=d[d.length-2], b=d[d.length-1];
+    if (mondayOf(b.date)===mon && (a.esforco||0) >= 8 && (b.esforco||0) >= 8) A.push({lvl:'warn', t:'Esforço ≥ 8 em 2 corridas seguidas', d:'Estás a correr depressa demais ou cansada. Abranda e fala com o teu treinador.'}); }
+  if (painInWeek(mon)) A.push({lvl:'danger', t:'Dor no mesmo sítio em 2 sessões seguidas', d:'Pára a corrida esta semana. Se a dor continuar, fala com um médico ou fisioterapeuta.'});
+  return A;
+}
+
+/* =====================================================================
+   RENDER
+   ===================================================================== */
+function render(){
+  evaluateWeeks();
+  document.querySelectorAll('nav.tabs button').forEach(b => b.classList.toggle('on', b.dataset.v === VIEW));
+  const y = window.scrollY;
+  const T = {hoje:['Hoje', renderHoje], corrida:['Corrida', renderCorrida], semana:['Semana', renderSemana], plano:['Plano', renderPlano]}[VIEW];
+  $('ttl').textContent = T[0];
+  const d = new Date(); $('subttl').textContent = DIAS[d.getDay()][0].toUpperCase()+DIAS[d.getDay()].slice(1)+', '+d.getDate()+' de '+MESES[d.getMonth()];
+  $('view').innerHTML = T[1]();
+  window.scrollTo(0, y);
+}
+
+function bannersTop(){
+  let h = '';
+  if (!STORAGE_OK) h += `<div class="banner danger"><b>Os dados não estão a ser guardados</b>Este navegador está a bloquear o armazenamento (modo privado?). Abre a app normalmente no Safari ou pelo ícone.</div>`;
+  if (!DB.prefs.coachAck) h += `<div class="banner warn"><b>Avisa o teu treinador</b>Diz-lhe que começaste a correr 2× por semana (no lugar dos 2 cardios de 50 min). A dieta foi feita sem contar com a corrida.<br><button class="btn" data-a="coachAck">Já avisei</button></div>`;
+  const nDays = Object.keys(DB.days).length;
+  const since = DB.lastBackup ? Math.floor((parseISO(today()) - parseISO(DB.lastBackup))/864e5) : null;
+  if ((since == null && nDays >= 3) || (since != null && since >= 7)) h += `<div class="banner info"><b>Guarda uma cópia dos teus dados</b>${since==null?'Ainda não guardaste nenhuma cópia.':'A última foi há '+since+' dias.'} Se limpares o Safari ou mudares de telemóvel, perdes tudo.<br><button class="btn" data-a="backup">Guardar cópia agora</button></div>`;
+  alertsFor(mondayOf(today())).forEach(a => h += `<div class="banner ${a.lvl}"><b>${esc(a.t)}</b>${esc(a.d)}</div>`);
+  return h;
+}
+
+/* ---------------- HOJE ---------------- */
+function renderHoje(){
+  const date = today(), d = dayR(date), type = dayType(date), plan = PLANO[type];
+  const got = dayKcal(date), target = PLAN_KCAL(type);
+  let h = bannersTop();
+  h += `<div class="card"><div class="seg">
+      <button data-a="dayType" data-v="treino" class="${type==='treino'?'on':''}">Dia de treino</button>
+      <button data-a="dayType" data-v="descanso" class="${type==='descanso'?'on':''}">Dia de descanso</button></div>
+      ${runToday(date) ? '<div class="note">Correste hoje, por isso é dia de treino.</div>' : '<div class="note">Treino, corrida ou cardio = dia de treino. Só o dia de descanso total é de descanso.</div>'}
+      <div class="row between" style="margin-top:12px"><div><div class="tiny muted">Registado hoje</div><div class="big">${got} <span class="small muted">/ ~${target} kcal</span></div></div>
+      <div class="tag ${mealsLogged(date)===plan.meals.length?'ok':''}">${mealsLogged(date)}/${plan.meals.length} refeições</div></div>
+      <div class="bar"><i style="width:${Math.min(100, Math.round(got/target*100))}%"></i></div></div>`;
+  h += checkinCard(date, d);
+  plan.meals.forEach(m => h += mealCard(date, type, m, d.meals[m.id]));
+  h += extrasCard(date, d);
+  h += suplCard(date, d, type);
+  h += aguaCard(date, d);
+  return h;
+}
+
+function checkinCard(date, d){
+  const c = d.checkin;
+  if (c && !EDIT.has('checkin')) return `<div class="card"><div class="row between"><h2 style="margin:0">Check-in da manhã</h2><span class="tag ok">feito</span></div>
+     <div class="small" style="margin-top:6px">Peso ${c.peso!=null?f1(c.peso)+' kg':'—'} · Sono ${c.sono!=null?f1(c.sono)+' h':'—'} · Energia ${c.energia??'—'}/5</div>
+     <button class="btn ghost small" style="min-height:40px;margin-top:6px" data-a="editCheckin">Editar</button></div>`;
+  return `<div class="card" id="ckcard"><h2>Check-in da manhã</h2>
+    <div class="kv"><div><label class="f" style="margin-top:0">Peso em jejum (kg)</label><input class="in" id="ck_peso" inputmode="decimal" placeholder="ex.: 52,4" value="${c&&c.peso!=null?f1(c.peso):''}"></div>
+    <div><label class="f" style="margin-top:0">Horas de sono</label><input class="in" id="ck_sono" inputmode="decimal" placeholder="ex.: 7,5" value="${c&&c.sono!=null?f1(c.sono):''}"></div></div>
+    <label class="f">Energia (1 = sem forças · 5 = ótima)</label>
+    <div class="chips" id="ck_en">${[1,2,3,4,5].map(n => `<button class="chip num ${c&&c.energia===n?'sel':''}" data-a="ckEn" data-v="${n}">${n}</button>`).join('')}</div>
+    <div class="btns one"><button class="btn primary" data-a="saveCheckin">Guardar check-in</button></div></div>`;
+}
+
+function choiceFor(date, type, meal, g){
+  const key = date+'|'+type+'|'+meal.id;
+  const dr = DRAFT[key] && DRAFT[key][g.id];
+  if (dr) return dr;
+  const last = DB.prefs.last[type+'.'+meal.id+'.'+g.id];
+  const o = g.opts.find(x => x.id === last) || g.opts[0];
+  return {id:o.id, label:o.label, kcal:o.kcal};
+}
+function mealCard(date, type, meal, rec){
+  const key = date+'|'+type+'|'+meal.id;
+  if (rec && rec.status && !EDIT.has(key)){
+    let body = '', cls = 'done';
+    if (rec.status === 'feito'){
+      body = rec.items.map(it => it.id==='outro' ? `<b>✎ ${esc(it.label)}</b> (${it.kcal} kcal, ${esc(it.motivo||'')})` : esc(it.label.replace(/^\d+[,.]?\d* ?(g|ml)? ?/,''))).join(' · ');
+    } else if (rec.status === 'nao'){ cls = 'skip'; body = `<b>Não comi</b> · ${esc(rec.motivo)}`; }
+    else { cls = 'skip'; body = `<b>Comi outra coisa:</b> ${esc(rec.desc)} · ~${rec.kcal} kcal · ${esc(rec.motivo)}`; }
+    return `<div class="card meal ${cls}"><div class="head"><h2>${rec.status==='feito'?'✓ ':''}${esc(meal.nome)}</h2><span class="kc">${rec.status==='nao'?'0':rec.kcal} kcal</span></div>
+      <div class="status">${body}</div>
+      <button class="btn ghost small" style="min-height:40px;margin-top:6px" data-a="editMeal" data-k="${key}">Alterar</button></div>`;
+  }
+  const choices = meal.groups.map(g => choiceFor(date, type, meal, g));
+  const total = choices.reduce((s,c) => s + (c.kcal||0), 0);
+  let h = `<div class="card meal"><div class="head"><h2>${esc(meal.nome)}</h2><span class="kc">${total} kcal</span></div>`;
+  if (meal.sub) h += `<div class="small muted">${esc(meal.sub)}</div>`;
+  meal.groups.forEach((g, gi) => {
+    const c = choices[gi];
+    h += `<div class="grp">${g.opts.length>1 || c.id==='outro' ? `<div class="gl">${esc(g.nome)}</div>` : ''}<div class="chips">`;
+    g.opts.forEach(o => h += `<button class="chip ${c.id===o.id?'sel':''}" data-a="pickOpt" data-k="${key}" data-g="${g.id}" data-v="${o.id}">${esc(o.label)}<span class="k">${o.kcal}</span></button>`);
+    if (c.id === 'outro') h += `<button class="chip sel" data-a="swap" data-k="${key}" data-g="${g.id}">✎ ${esc(c.label)}<span class="k">${c.kcal}</span></button>`;
+    else h += `<button class="chip add" data-a="swap" data-k="${key}" data-g="${g.id}">Troquei…</button>`;
+    h += `</div></div>`;
+  });
+  const extra = [];
+  if (meal.hort) extra.push(meal.hort+' — hortícolas, não contam');
+  (meal.notas||[]).forEach(n => extra.push(n));
+  if (extra.length) h += `<div class="note">${extra.map(esc).join(' · ')}</div>`;
+  h += `<div class="btns three"><button class="btn food" data-a="mealDone" data-k="${key}">✓ Comi</button>
+        <button class="btn" data-a="mealNo" data-k="${key}">Não comi</button>
+        <button class="btn" data-a="mealOther" data-k="${key}">Outra coisa</button></div>`;
+  if (rec && rec.status) h += `<button class="btn ghost danger small full" style="min-height:40px;margin-top:6px" data-a="clearMeal" data-k="${key}">Apagar registo desta refeição</button>`;
+  return h + `</div>`;
+}
+function extrasCard(date, d){
+  let h = `<div class="card"><div class="row between"><h2 style="margin:0">Extras fora do plano</h2><span class="kc" style="color:var(--food);font-weight:700">${(d.extras||[]).reduce((s,x)=>s+x.kcal,0)} kcal</span></div>`;
+  if ((d.extras||[]).length) h += `<ul class="list">${d.extras.map((x,i) => `<li class="row between"><span>${esc(x.desc)} · ~${x.kcal} kcal · <span class="muted">${esc(x.motivo)}</span></span><button class="btn ghost danger" style="min-height:40px;padding:4px 10px" data-a="delExtra" data-v="${i}">✕</button></li>`).join('')}</ul>`;
+  else h += `<div class="note">Nada fora do plano hoje.</div>`;
+  return h + `<div class="btns one"><button class="btn" data-a="addExtra">+ Adicionar extra</button></div></div>`;
+}
+function suplCard(date, d, type){
+  const L = SUPL[type], n = L.filter(s => d.supl && d.supl[s.id]).length;
+  return `<div class="card"><div class="row between"><h2 style="margin:0">Suplementos</h2><span class="tag ${n===L.length?'ok':''}">${n}/${L.length}</span></div>
+    ${L.map(s => `<button class="supl ${d.supl&&d.supl[s.id]?'on':''}" data-a="supl" data-v="${s.id}"><span class="box">${d.supl&&d.supl[s.id]?'✓':''}</span><span><span class="t">${esc(s.t)}</span><br><span class="d">${esc(s.d)}</span></span></button>`).join('')}</div>`;
+}
+function aguaCard(date, d){
+  const a = d.agua||0;
+  return `<div class="card"><div class="row between"><h2 style="margin:0">Água</h2><span class="tag ${a>=AGUA_META?'ok':''}">${f1(a*0.25)} / 3 L</span></div>
+    <div class="water" style="margin-top:8px"><button class="btn" data-a="agua" data-v="-1">−</button><div style="flex:1;text-align:center"><div class="big">${a}</div><div class="tiny muted">copos de 250 ml</div></div><button class="btn" data-a="agua" data-v="1">+</button></div>
+    <div class="cups">${Array.from({length:Math.max(AGUA_META,a)},(_,i)=>`<i class="${i<a?'f':''}"></i>`).join('')}</div></div>`;
+}
+
+/* ---------------- CORRIDA ---------------- */
+function renderCorrida(){
+  const R = DB.run, st = curStep(), mon = mondayOf(today());
+  const wk = DB.runs.filter(r => r.done && mondayOf(r.date) === mon);
+  const ranToday = runToday(today());
+  let h = bannersTop();
+  if (painStopThisWeek()) h += `<div class="banner danger"><b>Esta semana não corres</b>Tiveste dor (≥ 2) no mesmo sítio em 2 sessões seguidas. Descansa da corrida até segunda-feira. Se a dor continuar, fala com um médico ou fisioterapeuta.</div>`;
+  h += `<div class="card runctx"><div class="row between"><div><div class="tiny muted">Plano de corrida</div><div class="big">Semana ${R.week} <span class="small muted">de ${STEPS.length}</span></div></div>
+     <span class="tag ${wk.length>=2?'ok':''}">${wk.length}/2 esta semana</span></div>
+     <div class="bar run"><i style="width:${Math.round((R.week-1+(R.completed?1:0))/STEPS.length*100)}%"></i></div>
+     ${R.completed ? '<div class="banner info" style="margin-top:12px"><b>Plano concluído! 🎉</b>Mantém 2 × 30′ por semana, no mesmo ritmo fácil.</div>' : ''}
+     <h3>Sessão desta semana</h3>
+     <div style="font-size:20px;font-weight:700">${esc(st.txt)}</div>
+     <div class="small muted">5′ a andar antes e 5′ depois · ${minTxt(runMin(st))} a correr · ${Math.round(totalMin(st))} min no total${st.nota?' · '+esc(st.nota):''}</div>
+     <h3>Como fazer</h3>
+     <div class="banner info" style="margin:0 0 8px"><b>Intensidade: fácil · esforço ${esc(st.esf)} em 10</b>${esc(st.foco)}</div>
+     <ul class="list small">${COMO.map(([t,d]) => `<li><b>${esc(t)}:</b> ${esc(d)}</li>`).join('')}</ul>`;
+  if (wk.length >= 2) h += `<div class="note">As 2 sessões da semana estão feitas ✓. Na segunda-feira a app decide se avanças ou repetes.</div>`;
+  else if (ranToday) h += `<div class="note">Já correste hoje. A próxima sessão é daqui a 2 ou 3 dias.</div>`;
+  h += `<div class="btns one"><button class="btn run full" data-a="startRun" ${painStopThisWeek()?'disabled style="opacity:.5"':''}>▶ Começar sessão com temporizador</button></div>
+     <div class="btns"><button class="btn" data-a="logRun">Registar sem temporizador</button><button class="btn" data-a="logMiss">Não consegui fazer</button></div>
+     <div class="btns one"><button class="btn ghost" data-a="addWalk">+ Caminhada rápida 30′ (opcional)</button></div></div>`;
+  h += zonesCard();
+  h += `<div class="card"><h2>Regras para avançar</h2><ul class="list small">
+     <li>2 sessões por semana (segunda a domingo), com 2–3 dias entre elas. Nunca em dias seguidos.</li>
+     <li>Nunca no dia a seguir aos Inferiores 1 ou 3 (os treinos pesados).</li>
+     <li>Na segunda-feira a app avalia a semana anterior. <b>Repete</b> a semana se: só fizeste 1 sessão, alguma custou muito, o esforço médio foi ≥ 7 ou tiveste dor no mesmo sítio 2 vezes seguidas. Repetir faz parte do plano.</li>
+     <li>Se te parecer fácil, segue o plano na mesma: o coração adapta-se depressa, os tendões e os ossos demoram mais.</li></ul></div>`;
+  h += runHistoryCard();
+  return h;
+}
+function zonesCard(){
+  return `<div class="card"><h2>A que ritmo corro?</h2>
+    <div class="small" style="margin-bottom:6px"><b>Mais devagar do que achas.</b> Usa o teste da conversa:</div>
+    <div class="zone"><span class="dot" style="background:var(--run)"></span><div><b>Fácil (o alvo)</b> — consegues dizer frases completas. Esforço 3–4 em 10.</div></div>
+    <div class="zone"><span class="dot" style="background:var(--warn)"></span><div><b>Limite</b> — só consegues frases curtas, aos bocados. Esforço 5–6. Aceitável no fim de cada bloco.</div></div>
+    <div class="zone"><span class="dot" style="background:var(--danger)"></span><div><b>Demasiado</b> — só palavras soltas. Esforço 7+. Abranda ou anda.</div></div>
+    <div class="note">Se tens relógio, regista no fim a frequência cardíaca média e o ritmo: servem só para vermos a tua evolução, não para correr atrás de números.</div></div>`;
+}
+function runHistoryCard(){
+  const all = [...DB.runs.map(r => ({...r, kind:'run'})), ...DB.walks.map(w => ({...w, kind:'walk'}))].sort((a,b) => (b.date+(b.t||'')).localeCompare(a.date+(a.t||''))).slice(0, 12);
+  let h = `<div class="card"><h2>Histórico</h2>`;
+  if (!all.length) return h + `<div class="note">Ainda sem sessões.</div></div>`;
+  h += `<ul class="list">` + all.map(r => {
+    if (r.kind === 'walk') return `<li><b>${fmtDW(r.date)}</b> · caminhada rápida ${r.min||30}′ <button class="btn ghost danger" style="min-height:36px;padding:2px 8px;float:right" data-a="delWalk" data-v="${r.id}">✕</button></li>`;
+    const ex = r.done ? `feita · sem. ${r.week} · ${r.min||'?'} min · esforço ${r.esforco??'—'} · ${CUSTO[r.custo]||''}${r.dor?` · dor ${r.dor} (${esc(r.dorLocal||'')})`:''}${r.fc?` · FC ${r.fc}`:''}${r.ritmo?` · ${esc(r.ritmo)}/km`:''}` : `não feita · ${esc(r.motivo||'')}`;
+    return `<li><b>${fmtDW(r.date)}</b> · ${ex}${r.notas?`<br><span class="muted small">“${esc(r.notas)}”</span>`:''} <button class="btn ghost small" style="min-height:36px;padding:2px 8px;float:right" data-a="editRun" data-v="${r.id}">Editar</button></li>`;
+  }).join('') + `</ul>`;
+  const hist = DB.run.history.slice(-4).reverse();
+  if (hist.length) h += `<h3>Decisões semanais</h3><ul class="list small">${hist.map(x => `<li>Semana de ${fmtD(x.monday)} (sem. ${x.week} do plano, ${x.done}/2): <b>${x.decision}</b>${x.reason?' — '+esc(x.reason):''}</li>`).join('')}</ul>`;
+  return h + `</div>`;
+}
+
+/* ---------------- SEMANA ---------------- */
+function weekStats(mon){
+  const dates = weekDates(mon).filter(d => d <= today());
+  const pesos = dates.map(d => dayR(d).checkin && dayR(d).checkin.peso).filter(x => x!=null);
+  const prevP = weekDates(addDays(mon,-7)).map(d => dayR(d).checkin && dayR(d).checkin.peso).filter(x => x!=null);
+  const full = dates.filter(d => mealsLogged(d) === PLANO[dayType(d)].meals.length);
+  return {
+    dates, pesoMed: avg(pesos), nPeso: pesos.length, pesoPrev: avg(prevP),
+    sono: avg(dates.map(d => dayR(d).checkin && dayR(d).checkin.sono)), energia: avg(dates.map(d => dayR(d).checkin && dayR(d).checkin.energia)),
+    nCheck: dates.filter(d => dayR(d).checkin).length,
+    full, kcalMed: avg(full.map(dayKcal)), planMed: avg(full.map(d => PLAN_KCAL(dayType(d)))),
+    runs: DB.runs.filter(r => mondayOf(r.date) === mon).sort((a,b)=>a.date.localeCompare(b.date)),
+    walks: DB.walks.filter(w => mondayOf(w.date) === mon),
+    agua: avg(dates.filter(d => DB.days[d]).map(d => dayR(d).agua||0)),
+  };
+}
+function renderSemana(){
+  const mon = WEEK_SEL, S = weekStats(mon), curMon = mondayOf(today());
+  const varP = S.pesoMed!=null && S.pesoPrev!=null ? S.pesoMed - S.pesoPrev : null;
+  let h = `<div class="card"><div class="row between">
+     <button class="btn" data-a="wk" data-v="-7" style="min-width:56px">‹</button>
+     <div style="text-align:center"><div style="font-weight:700">${fmtD(mon)} – ${fmtD(addDays(mon,6))}</div><div class="tiny muted">${mon===curMon?'esta semana':'semana anterior'}</div></div>
+     <button class="btn" data-a="wk" data-v="7" style="min-width:56px;${mon>=curMon?'opacity:.4':''}" ${mon>=curMon?'disabled':''}>›</button></div></div>`;
+  h += `<div class="card"><div class="kv">
+     <div><div class="l">Peso médio</div><div class="v">${S.pesoMed!=null?f1(S.pesoMed)+' kg':'—'}</div><div class="tiny muted">${varP!=null?(varP>0?'+':'')+f1(varP)+' kg vs semana anterior':S.nPeso+' pesagens'}</div></div>
+     <div><div class="l">Kcal média (dias completos)</div><div class="v">${S.kcalMed!=null?Math.round(S.kcalMed):'—'}</div><div class="tiny muted">${S.planMed!=null?'plano ~'+Math.round(S.planMed):''}</div></div>
+     <div><div class="l">Sono médio</div><div class="v">${S.sono!=null?f1(S.sono)+' h':'—'}</div></div>
+     <div><div class="l">Energia média</div><div class="v">${S.energia!=null?f1(S.energia)+'/5':'—'}</div></div>
+     <div><div class="l">Dias completos</div><div class="v">${S.full.length}/7</div><div class="tiny muted">todas as refeições registadas</div></div>
+     <div><div class="l">Corridas</div><div class="v">${S.runs.filter(r=>r.done).length}/2</div></div></div></div>`;
+  alertsFor(mon).forEach(a => h += `<div class="banner ${a.lvl}"><b>${esc(a.t)}</b>${esc(a.d)}</div>`);
+  const rep = buildReport(mon);
+  h += `<div class="card"><h2>Relatório para enviar</h2><div class="small muted">Copia e manda por WhatsApp.</div>
+     <div class="btns"><button class="btn primary" data-a="copyRep">Copiar relatório</button><button class="btn" data-a="shareRep">Enviar…</button></div>
+     <details><summary>Ver o texto</summary><pre class="rep" id="reptext">${esc(rep)}</pre></details></div>`;
+  h += `<div class="card"><h2>Cópia de segurança</h2>
+     <div class="small">Os teus dados só existem neste telemóvel. Guarda uma cópia 1× por semana (no iPhone: “Guardar em Ficheiros”, ou envia-a para ti no WhatsApp).</div>
+     <div class="note">Última cópia: <b>${DB.lastBackup ? fmtD(DB.lastBackup) : 'nunca'}</b></div>
+     <div class="btns"><button class="btn primary" data-a="backup">Guardar cópia</button><button class="btn" data-a="restore">Repor cópia</button></div></div>`;
+  return h;
+}
+
+/* ---------------- RELATÓRIO ---------------- */
+function buildReport(mon){
+  const S = weekStats(mon), L = [];
+  const stepAt = (() => { const hi = DB.run.history.find(x => x.monday === mon); if (hi) return hi.week; const r = S.runs.find(r => r.week); return r ? r.week : DB.run.week; })();
+  L.push(`📋 RELATÓRIO SEMANAL`);
+  L.push(`Semana de ${fmtD(mon)} a ${fmtD(addDays(mon,6))} ${parseISO(mon).getFullYear()}`);
+  L.push(`Corrida: semana ${stepAt} do plano — ${STEPS[stepAt-1].txt}`);
+  L.push('');
+  const varP = S.pesoMed!=null && S.pesoPrev!=null ? S.pesoMed - S.pesoPrev : null;
+  L.push(`⚖️ Peso médio: ${S.pesoMed!=null?f1(S.pesoMed)+' kg':'sem registos'}${varP!=null?` (${varP>0?'+':''}${f1(varP)} kg vs semana anterior)`:''} · ${S.nPeso} ${S.nPeso===1?'pesagem':'pesagens'}`);
+  L.push(`😴 Sono médio: ${S.sono!=null?f1(S.sono)+' h':'—'} · ⚡ Energia média: ${S.energia!=null?f1(S.energia)+'/5':'—'} · check-ins ${S.nCheck}/${S.dates.length}`);
+  L.push('');
+  L.push(`🍽️ ALIMENTAÇÃO`);
+  L.push(`Dias com as refeições todas registadas: ${S.full.length}/${S.dates.length}`);
+  if (S.kcalMed != null) L.push(`Kcal média nesses dias: ${Math.round(S.kcalMed)} (plano ~${Math.round(S.planMed)})`);
+  const types = S.dates.filter(d => DB.days[d] || runToday(d)).map(dayType);
+  L.push(`Tipo de dia: ${types.filter(t=>t==='treino').length} treino · ${types.filter(t=>t==='descanso').length} descanso`);
+  // escolhas
+  const cnt = {}, trocas = [], naos = [], outras = [], motivos = {};
+  S.dates.forEach(date => {
+    const d = dayR(date), t = dayType(date);
+    PLANO[t].meals.forEach(m => {
+      const r = d.meals[m.id]; if (!r || !r.status) return;
+      const mn = m.nome.split(' ·')[0];
+      if (r.status === 'feito') r.items.forEach(it => {
+        const g = m.groups.find(x => x.id === it.g); if (!g) return;
+        if (it.id === 'outro'){ trocas.push(`${fmtDW(date)} ${mn}: ${g.nome} → ${it.label} (~${it.kcal} kcal) · ${it.motivo||''}`); motivos[it.motivo] = (motivos[it.motivo]||0)+1; return; }
+        if (g.opts.length < 2) return;
+        const k = mn+' — '+g.nome; cnt[k] = cnt[k] || {}; const lab = it.label.replace(/^[\d,.]+ ?(g|ml)? ?/,'').replace(/ \(.*\)$/,'');
+        cnt[k][lab] = (cnt[k][lab]||0)+1;
+      });
+      else if (r.status === 'nao'){ naos.push(`${fmtDW(date)} ${mn} · ${r.motivo}`); motivos[r.motivo] = (motivos[r.motivo]||0)+1; }
+      else { outras.push(`${fmtDW(date)} ${mn}: ${r.desc} (~${r.kcal} kcal) · ${r.motivo}`); motivos[r.motivo] = (motivos[r.motivo]||0)+1; }
+    });
+  });
+  const ext = []; S.dates.forEach(date => (dayR(date).extras||[]).forEach(x => { ext.push(`${fmtDW(date)}: ${x.desc} (~${x.kcal} kcal) · ${x.motivo}`); motivos[x.motivo] = (motivos[x.motivo]||0)+1; }));
+  const ck = Object.keys(cnt);
+  if (ck.length){ L.push(`Escolhas:`); ck.forEach(k => L.push(`- ${k}: ${Object.entries(cnt[k]).sort((a,b)=>b[1]-a[1]).map(([l,n])=>`${l} ${n}×`).join(' · ')}`)); }
+  L.push(`Trocas (${trocas.length})${trocas.length?':':''}`); trocas.forEach(x => L.push('- '+x));
+  L.push(`Não comi (${naos.length})${naos.length?':':''}`); naos.forEach(x => L.push('- '+x));
+  L.push(`Comi outra coisa (${outras.length})${outras.length?':':''}`); outras.forEach(x => L.push('- '+x));
+  L.push(`Extras (${ext.length})${ext.length?':':''}`); ext.forEach(x => L.push('- '+x));
+  const mk = Object.entries(motivos).filter(([k]) => k && k!=='undefined');
+  if (mk.length) L.push(`Motivos: ${mk.sort((a,b)=>b[1]-a[1]).map(([k,n]) => `${k} ${n}`).join(' · ')}`);
+  const suplDays = S.dates.filter(d => DB.days[d]);
+  const suplFull = suplDays.filter(d => SUPL[dayType(d)].every(s => dayR(d).supl && dayR(d).supl[s.id])).length;
+  L.push(`💊 Suplementos: todos tomados em ${suplFull}/${suplDays.length} dias registados`);
+  L.push(`💧 Água média: ${S.agua!=null?f1(S.agua*0.25)+' L':'—'}`);
+  L.push('');
+  L.push(`🏃 CORRIDA`);
+  L.push(`Sessões feitas: ${S.runs.filter(r=>r.done).length}/2`);
+  S.runs.forEach(r => L.push(r.done
+    ? `- ${fmtDW(r.date)}: ${r.min||'?'} min${r.completo===false?' (terminou mais cedo)':''} · esforço ${r.esforco??'—'}/10 · ${CUSTO[r.custo]||'—'} · dor ${r.dor||0}${r.dor?' ('+r.dorLocal+')':''}${r.fc?' · FC média '+r.fc:''}${r.ritmo?' · ritmo '+r.ritmo+'/km':''}${r.aposPesado?' · ⚠️ correu no dia a seguir a inferiores pesados':''}${r.notas?' · “'+r.notas+'”':''}`
+    : `- ${fmtDW(r.date)}: não feita · ${r.motivo||''}`));
+  if (S.walks.length) L.push(`Caminhadas rápidas: ${S.walks.length}`);
+  const hi = DB.run.history.find(x => x.monday === mon);
+  if (hi) L.push(`Decisão: ${hi.decision === 'avança' ? 'avança para a semana '+Math.min(hi.week+1, STEPS.length) : 'repete a semana '+hi.week+' ('+hi.reason+')'}`);
+  else if (mon === mondayOf(today())){ const v = weekVerdict(mon); L.push(`Previsão (semana em curso): ${v ? 'repete — '+v : 'avança'}`); }
+  L.push('');
+  const A = alertsFor(mon);
+  L.push(`⚠️ ALERTAS: ${A.length ? '' : 'nenhum'}`); A.forEach(a => L.push('- '+a.t));
+  L.push(''); L.push(`(app v${APP_VERSION})`);
+  return L.join('\n');
+}
+
+/* ---------------- PLANO ---------------- */
+function renderPlano(){
+  const P = PLANO[PLAN_VIEW];
+  let h = '';
+  const standalone = window.navigator.standalone === true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
+  h += `<div class="card"><h2>Instalar no ecrã principal</h2>${standalone ? '<div class="tag ok">Estás a usar a app instalada ✓</div>' : ''}
+    <div class="plantext small"><p><b>iPhone (Safari):</b> toca em <b>Partilhar</b> (quadrado com seta para cima) → <b>Adicionar ao ecrã principal</b> → Adicionar.</p>
+    <p><b>Android (Chrome):</b> menu <b>⋮</b> → <b>Instalar app</b> ou <b>Adicionar ao ecrã principal</b>.</p>
+    <p class="muted">Importante no iPhone: o que registas no Safari e no ícone ficam guardados em sítios diferentes. Instala primeiro e usa <b>sempre pelo ícone</b>.</p></div></div>`;
+  h += `<div class="card"><h2>Avisos</h2><ul class="list small">
+    <li><b>Avisa o teu treinador</b> que começaste a correr 2× por semana, no lugar dos 2 cardios. ${DB.prefs.coachAck?'<span class="tag ok">avisado</span>':`<button class="btn" style="min-height:38px;margin-left:6px" data-a="coachAck">Já avisei</button>`}</li>
+    <li>Se tiveres alguma condição de saúde (coração, tensão, tonturas, asma, lesões), fala com o médico antes de correr.</li>
+    <li>Energia ≤ 2 em 3 dias da mesma semana, ou cansaço que não passa → fala com o treinador.</li>
+    <li>Dor ≥ 2 no mesmo sítio em duas corridas seguidas → pára a corrida nessa semana.</li></ul></div>`;
+  h += `<div class="card"><h2>Plano alimentar</h2><div class="seg">
+      <button data-a="planView" data-v="treino" class="${PLAN_VIEW==='treino'?'on':''}">Treino</button>
+      <button data-a="planView" data-v="descanso" class="${PLAN_VIEW==='descanso'?'on':''}">Descanso</button></div>
+    <div class="plantext">`;
+  h += `<p class="small muted" style="margin-top:10px">Em jejum, 10–15 min antes da 1ª refeição: 1 cápsula de probiótico + 1 Gzyme + 1 Digezyme.</p>`;
+  P.meals.forEach(m => {
+    h += `<h3>${esc(m.nome)} · ~${mealPlanKcal(m)} kcal</h3>${m.sub?`<div class="small muted">${esc(m.sub)}</div>`:''}<ul>`;
+    m.groups.forEach(g => h += `<li>${g.opts.length>3 ? esc(g.nome)+': '+g.opts.map(o=>esc(o.label.replace(/ \(.*\)/,''))+' ('+o.kcal+')').join(', ') : g.opts.map(o=>esc(o.label)+' <span class="muted">('+o.kcal+' kcal)</span>').join(' <b>ou</b> ')}</li>`);
+    if (m.hort) h += `<li>${esc(m.hort)} <span class="muted">(hortícolas: não contam)</span></li>`;
+    (m.notas||[]).forEach(n => h += `<li>${esc(n)}</li>`);
+    h += `</ul>`;
+  });
+  h += `<h3>Suplementos</h3><ul>${SUPL[PLAN_VIEW].map(s=>`<li><b>${esc(s.t)}:</b> ${esc(s.d)}</li>`).join('')}</ul>
+    <p class="small"><b>Total estimado: ~${PLAN_KCAL(PLAN_VIEW)} kcal</b> (com a primeira opção de cada grupo).</p></div></div>`;
+  h += `<div class="card plantext small"><h2>Recomendações do plano</h2><ul>
+    <li>Toda a comida é pesada crua.</li>
+    <li>Café, chá, especiarias, ervas aromáticas e canela não contam para as calorias.</li>
+    <li>Hortícolas não contam (as quantidades são orientadoras); não passar dos 300 g/dia. (a) brócolos, curgete, couve, pimento, espargos, espinafres, cenoura, abóbora, alho-francês, cogumelos, feijão-verde… (b) pepino, tomate, alface, rúcula, cebola.</li>
+    <li>3 g de sal por dia${PLAN_VIEW==='treino'?' + eletrólitos':''}.</li>
+    <li>3 L de água por dia.</li>
+    <li>Refeições com 2 a 4 horas de intervalo.</li>
+    <li>Comida grelhada sem gordura (podes usar o spray zero da Prozis). Azeite só quando o plano indica.</li></ul></div>`;
+  h += `<div class="card plantext small"><h2>Semana de treino</h2>
+    <p>Do plano do treinador: Inferiores 1 · Superiores + HIIT · Inferiores 2 · Inferiores 3 · 2 cardios (agora as <b>2 corridas</b>) · 1 dia de descanso total.</p>
+    <ul><li>Os Inferiores 1 e 3 são os mais pesados; o 2 é mais leve e técnico.</li>
+    <li>1 dia entre os treinos 1 e 2 e entre o 2 e o 3 (2 se o trabalho não permitir); 2 dias entre o 3 e o 1 (ou 3).</li>
+    <li>Superiores sempre no mesmo dia da semana.</li>
+    <li><b>Corrida:</b> nunca no dia a seguir aos Inferiores 1 ou 3, nem em dias seguidos.</li></ul>
+    <p><b>Exemplo</b> (ajusta à tua semana):<br>Seg Inferiores 1 · Ter Superiores + HIIT · Qua Inferiores 2 · <b>Qui Corrida</b> · Sex Inferiores 3 · Sáb Descanso · <b>Dom Corrida</b></p></div>`;
+  h += `<div class="card"><h2>Plano de corrida</h2><table class="plan"><tr><th>Sem.</th><th>Sessão (+ 5′ a andar antes e depois) e como fazer</th><th>A correr</th></tr>
+    ${STEPS.map((s,i) => `<tr class="${i+1===DB.run.week?'cur':(i+1<DB.run.week?'past':'')}"><td>${i+1}</td><td>${esc(s.txt)}<br><span class="tiny"><b>Fácil · esforço ${esc(s.esf)}</b> — ${esc(s.foco)}</span>${s.nota?`<br><span class="tiny muted">${esc(s.nota)}</span>`:''}</td><td>${minTxt(runMin(s))}</td></tr>`).join('')}</table>
+    <div class="note">Todas as corridas são em ritmo <b>fácil</b> (teste da conversa). Não há treinos rápidos neste plano: o objetivo é chegar aos 30′ sem lesões. Se uma semana se repetir, os 30′ chegam mais tarde — é normal e é mais seguro.</div></div>`;
+  h += zonesCard();
+  h += `<div class="card plantext small"><h2>Sobre as calorias</h2>
+    <p>O plano do treinador não traz calorias. Os valores da app são <b>estimativas</b> a partir de rótulos das marcas e tabelas de composição (alimento cru), com uma margem de ±100 kcal por dia.</p>
+    <p>Tapioca: valor de goma de tapioca hidratada. Chocolate: quadrado de 10 g. Salmão: de aquacultura. Fruta “50 kcal à escolha”: as gramas indicadas dão ~50 kcal.</p></div>`;
+  h += `<p class="tiny muted" style="text-align:center">Versão ${APP_VERSION} · os dados ficam só neste telemóvel</p>`;
+  return h;
+}
+
+/* =====================================================================
+   SHEETS (janelas de baixo)
+   ===================================================================== */
+function openSheet(html, ctx){
+  SHEET = Object.assign({vals:{}}, ctx||{});
+  $('sheet').innerHTML = `<div class="grab"></div>${html}`;
+  $('scrim').classList.add('on'); $('sheet').classList.add('on'); $('sheet').scrollTop = 0;
+}
+function closeSheet(){ $('scrim').classList.remove('on'); $('sheet').classList.remove('on'); SHEET = null; }
+const chipRow = (k, list, sel) => `<div class="chips" data-k="${k}">${list.map(v => `<button class="chip ${sel===v?'sel':''}" data-a="pick" data-k="${k}" data-v="${esc(v)}">${esc(v)}</button>`).join('')}</div>`;
+const numRow = (k, from, to, sel, lab) => `<div class="chips" data-k="${k}">${Array.from({length:to-from+1},(_,i)=>i+from).map(n => `<button class="chip num ${sel===n?'sel':''}" data-a="pick" data-k="${k}" data-v="${n}" data-n="1">${n}${lab&&lab[n]?' '+lab[n]:''}</button>`).join('')}</div>`;
+
+function toast(msg){ const t = $('toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('on'), 2200); }
+
+/* =====================================================================
+   AÇÕES
+   ===================================================================== */
+const parseKey = key => { const [date, type, mid] = key.split('|'); const meal = PLANO[type].meals.find(m => m.id === mid); return {date, type, meal}; };
+const A = {
+  tab(el){ VIEW = el.dataset.v; if (VIEW==='semana') WEEK_SEL = mondayOf(today()); render(); window.scrollTo(0,0); },
+  closeSheet(){ closeSheet(); },
+  coachAck(){ DB.prefs.coachAck = true; save(); render(); toast('Boa! Obrigada.'); },
+  dayType(el){ const date = today(); if (runToday(date) && el.dataset.v==='descanso'){ toast('Hoje correste: é dia de treino.'); return; } dayW(date).type = el.dataset.v; save(); render(); },
+  ckEn(el){ document.querySelectorAll('#ck_en .chip').forEach(c => c.classList.toggle('sel', c===el)); A._ck = Number(el.dataset.v); },
+  saveCheckin(){
+    const peso = num($('ck_peso').value), sono = num($('ck_sono').value);
+    const en = A._ck ?? (dayR(today()).checkin && dayR(today()).checkin.energia) ?? null;
+    if (peso == null && sono == null && en == null){ toast('Preenche pelo menos um campo.'); return; }
+    if (peso != null && (peso < 30 || peso > 150)){ toast('Confirma o peso (em kg).'); return; }
+    if (sono != null && (sono < 0 || sono > 16)){ toast('Confirma as horas de sono.'); return; }
+    dayW(today()).checkin = { peso, sono, energia: en, at: Date.now() }; A._ck = null; EDIT.delete('checkin'); save(); render(); toast('Check-in guardado');
+  },
+  editCheckin(){ EDIT.add('checkin'); A._ck = dayR(today()).checkin && dayR(today()).checkin.energia; render(); },
+  pickOpt(el){
+    const {date, type, meal} = parseKey(el.dataset.k); const g = meal.groups.find(x => x.id === el.dataset.g); const o = g.opts.find(x => x.id === el.dataset.v);
+    DRAFT[el.dataset.k] = DRAFT[el.dataset.k] || {}; DRAFT[el.dataset.k][g.id] = {id:o.id, label:o.label, kcal:o.kcal}; render();
+  },
+  swap(el){
+    const {meal} = parseKey(el.dataset.k); const g = meal.groups.find(x => x.id === el.dataset.g);
+    const cur = (DRAFT[el.dataset.k]||{})[g.id];
+    openSheet(`<h2>Troquei: ${esc(g.nome)}</h2><div class="small muted">O que comeste em vez de “${esc(g.opts[0].label)}”?</div>
+      <label class="f">O quê (e quanto)</label><input class="in" id="sw_desc" placeholder="ex.: 150 g iogurte grego" value="${cur&&cur.id==='outro'?esc(cur.label):''}">
+      <label class="f">Calorias aproximadas</label><input class="in" id="sw_kcal" inputmode="numeric" placeholder="ex.: 120" value="${cur&&cur.id==='outro'?cur.kcal:''}">
+      <label class="f">Porquê?</label>${chipRow('motivo', MOTIVOS_TROCA, cur&&cur.motivo)}
+      <div class="btns"><button class="btn" data-a="closeSheet">Cancelar</button><button class="btn food" data-a="swapSave">Guardar troca</button></div>`,
+      {k:el.dataset.k, g:g.id, vals:{motivo: cur&&cur.motivo}});
+  },
+  swapSave(){
+    const desc = $('sw_desc').value.trim(), kcal = num($('sw_kcal').value), mot = SHEET.vals.motivo;
+    if (!desc){ toast('Escreve o que comeste.'); return; } if (kcal == null || kcal < 0 || kcal > 3000){ toast('Põe as calorias aproximadas.'); return; } if (!mot){ toast('Escolhe o motivo.'); return; }
+    DRAFT[SHEET.k] = DRAFT[SHEET.k] || {}; DRAFT[SHEET.k][SHEET.g] = {id:'outro', label:desc, kcal:Math.round(kcal), motivo:mot};
+    closeSheet(); render();
+  },
+  mealDone(el){
+    const key = el.dataset.k, {date, type, meal} = parseKey(key);
+    const items = meal.groups.map(g => Object.assign({g:g.id}, choiceFor(date, type, meal, g)));
+    const d = dayW(date); d.meals[meal.id] = { status:'feito', items, kcal: items.reduce((s,x)=>s+x.kcal,0), at: Date.now() };
+    if (!DB.days[date].type) d.type = type;
+    items.forEach(it => { if (it.id !== 'outro') DB.prefs.last[type+'.'+meal.id+'.'+it.g] = it.id; });
+    delete DRAFT[key]; EDIT.delete(key); save(); render(); toast(meal.nome+' registada');
+  },
+  mealNo(el){
+    const {meal} = parseKey(el.dataset.k);
+    openSheet(`<h2>Não comi: ${esc(meal.nome)}</h2><label class="f">Porquê?</label>${chipRow('motivo', MOTIVOS)}
+      <div class="btns"><button class="btn" data-a="closeSheet">Cancelar</button><button class="btn food" data-a="noSave">Guardar</button></div>`, {k:el.dataset.k});
+  },
+  noSave(){ if (!SHEET.vals.motivo){ toast('Escolhe o motivo.'); return; }
+    const {date, meal} = parseKey(SHEET.k); dayW(date).meals[meal.id] = {status:'nao', motivo:SHEET.vals.motivo, kcal:0, at:Date.now()};
+    EDIT.delete(SHEET.k); delete DRAFT[SHEET.k]; closeSheet(); save(); render(); },
+  mealOther(el){
+    const {meal} = parseKey(el.dataset.k);
+    openSheet(`<h2>Comi outra coisa: ${esc(meal.nome)}</h2>
+      <label class="f">O que comeste</label><input class="in" id="ot_desc" placeholder="ex.: tosta mista e sumo">
+      <label class="f">Calorias aproximadas</label><input class="in" id="ot_kcal" inputmode="numeric" placeholder="ex.: 450">
+      <label class="f">Porquê?</label>${chipRow('motivo', MOTIVOS)}
+      <div class="btns"><button class="btn" data-a="closeSheet">Cancelar</button><button class="btn food" data-a="otherSave">Guardar</button></div>`, {k:el.dataset.k});
+  },
+  otherSave(){
+    const desc = $('ot_desc').value.trim(), kcal = num($('ot_kcal').value);
+    if (!desc){ toast('Escreve o que comeste.'); return; } if (kcal == null || kcal < 0 || kcal > 5000){ toast('Põe as calorias aproximadas.'); return; } if (!SHEET.vals.motivo){ toast('Escolhe o motivo.'); return; }
+    const {date, meal} = parseKey(SHEET.k); dayW(date).meals[meal.id] = {status:'outra', desc, kcal:Math.round(kcal), motivo:SHEET.vals.motivo, at:Date.now()};
+    EDIT.delete(SHEET.k); delete DRAFT[SHEET.k]; closeSheet(); save(); render();
+  },
+  editMeal(el){
+    const key = el.dataset.k, {date, meal} = parseKey(key), r = dayR(date).meals[meal.id];
+    if (r && r.status === 'feito'){ DRAFT[key] = {}; r.items.forEach(it => DRAFT[key][it.g] = {id:it.id, label:it.label, kcal:it.kcal, motivo:it.motivo}); }
+    EDIT.add(key); render();
+  },
+  clearMeal(el){ const key = el.dataset.k, {date, meal} = parseKey(key); delete dayW(date).meals[meal.id]; EDIT.delete(key); delete DRAFT[key]; save(); render(); toast('Registo apagado'); },
+  addExtra(){
+    openSheet(`<h2>Extra fora do plano</h2>
+      <label class="f">O quê</label><input class="in" id="ex_desc" placeholder="ex.: 2 bolachas Maria">
+      <label class="f">Calorias aproximadas</label><input class="in" id="ex_kcal" inputmode="numeric" placeholder="ex.: 70">
+      <label class="f">Porquê?</label>${chipRow('motivo', MOTIVOS)}
+      <div class="btns"><button class="btn" data-a="closeSheet">Cancelar</button><button class="btn food" data-a="extraSave">Adicionar</button></div>`);
+  },
+  extraSave(){
+    const desc = $('ex_desc').value.trim(), kcal = num($('ex_kcal').value);
+    if (!desc){ toast('Escreve o que comeste.'); return; } if (kcal == null || kcal < 0 || kcal > 5000){ toast('Põe as calorias aproximadas.'); return; } if (!SHEET.vals.motivo){ toast('Escolhe o motivo.'); return; }
+    dayW(today()).extras.push({desc, kcal:Math.round(kcal), motivo:SHEET.vals.motivo, at:Date.now()}); closeSheet(); save(); render();
+  },
+  delExtra(el){ dayW(today()).extras.splice(Number(el.dataset.v), 1); save(); render(); },
+  supl(el){ const d = dayW(today()); d.supl = d.supl || {}; d.supl[el.dataset.v] = !d.supl[el.dataset.v]; save(); render(); },
+  agua(el){ const d = dayW(today()); d.agua = Math.max(0, (d.agua||0) + Number(el.dataset.v)); save(); render(); },
+  pick(el){
+    if (!SHEET) return; const k = el.dataset.k, v = el.dataset.n ? Number(el.dataset.v) : el.dataset.v;
+    SHEET.vals[k] = v;
+    document.querySelectorAll(`#sheet .chips[data-k="${k}"] .chip`).forEach(c => c.classList.toggle('sel', c === el));
+    if (k === 'dor'){ const w = $('dorwrap'); if (w) w.classList.toggle('hidden', !(v > 0)); }
+    if (k === 'feita'){ $('feitaSim') && $('feitaSim').classList.toggle('hidden', v !== 'Sim'); $('feitaNao') && $('feitaNao').classList.toggle('hidden', v !== 'Não'); }
+  },
+  /* -------- corrida -------- */
+  startRun(){
+    if (painStopThisWeek()){ toast('Esta semana não corres (dor).'); return; }
+    if (!DB.prefs.healthAck){
+      openSheet(`<h2>Antes da primeira corrida</h2><p>Se tens alguma condição de saúde — coração, tensão, tonturas, asma ou uma lesão — fala primeiro com o médico.</p>
+        <p class="small muted">Durante a corrida: se sentires dor no peito, tonturas ou falta de ar fora do normal, pára e procura ajuda.</p>
+        <div class="btns one"><button class="btn run" data-a="healthOk">Percebi, não tenho nenhuma condição</button></div>`); return;
+    }
+    const y = addDays(today(), -1);
+    if (DB.runs.some(r => r.done && r.date === y)){
+      openSheet(`<h2>Correste ontem</h2><p>As corridas devem ter 2–3 dias entre elas. Hoje o melhor é descansar da corrida.</p>
+        <div class="btns"><button class="btn" data-a="closeSheet">Fica para outro dia</button><button class="btn" data-a="preQ">Correr na mesma</button></div>`, {force:'seguidos'}); return;
+    }
+    A.preQ();
+  },
+  healthOk(){ DB.prefs.healthAck = true; save(); closeSheet(); A.startRun(); },
+  preQ(){
+    const ctx = SHEET ? {force: SHEET.force} : {};
+    openSheet(`<h2>Antes de começar</h2><p style="font-size:20px">Ontem fizeste <b>Inferiores 1 ou 3</b> (os treinos pesados de pernas)?</p>
+      <div class="btns"><button class="btn" data-a="preYes">Sim</button><button class="btn run" data-a="preNo">Não</button></div>`, ctx);
+  },
+  preYes(){
+    const ctx = {force: SHEET && SHEET.force};
+    openSheet(`<h2>Hoje não é bom dia</h2><p>As pernas ainda estão a recuperar do treino pesado e é aí que as lesões aparecem em quem começa a correr. Passa a corrida para amanhã ou depois.</p>
+      <div class="btns"><button class="btn run" data-a="closeSheet">Mudo de dia</button><button class="btn" data-a="preForce">Correr na mesma</button></div>`, ctx);
+  },
+  preForce(){ const f = SHEET && SHEET.force; closeSheet(); startTimer({aposPesado:true, seguidos: f==='seguidos'}); },
+  preNo(){ const f = SHEET && SHEET.force; closeSheet(); startTimer({aposPesado:false, seguidos: f==='seguidos'}); },
+  logRun(){ runForm({done:true}); },
+  logMiss(){ runForm({done:false}); },
+  editRun(el){ const r = DB.runs.find(x => x.id === el.dataset.v); if (r) runForm(r, true); },
+  runSave(){
+    const v = SHEET.vals, edit = SHEET.edit, base = SHEET.base || {};
+    const date = $('rn_date').value || today();
+    if (date > today()){ toast('A data não pode ser no futuro.'); return; }
+    if (!edit && DB.run.evaluatedThrough && mondayOf(date) <= DB.run.evaluatedThrough){ toast('Essa semana já foi avaliada. Escolhe uma data desta semana.'); return; }
+    const done = v.feita === 'Sim';
+    if (!v.feita){ toast('Diz se fizeste a sessão.'); return; }
+    let r = { id: base.id || ('r'+Date.now()), date, t: base.t || new Date().toTimeString().slice(0,5), week: base.week || DB.run.week, done };
+    if (done){
+      const min = num($('rn_min').value);
+      if (min == null || min <= 0 || min > 180){ toast('Põe os minutos da sessão.'); return; }
+      if (v.esforco == null){ toast('Escolhe o esforço (1–10).'); return; }
+      if (!v.custo){ toast('Diz como correu.'); return; }
+      if (v.dor == null){ toast('Diz se tiveste dor (0 = nenhuma).'); return; }
+      if (v.dor > 0 && !v.dorLocal){ toast('Diz onde foi a dor.'); return; }
+      const fc = num($('rn_fc').value); const ritmo = $('rn_ritmo').value.trim();
+      Object.assign(r, { min: Math.round(min), esforco: v.esforco, custo: ({'Correu bem':'bem','Custou mas deu':'deu','Custou muito':'muito'})[v.custo], dor: v.dor, dorLocal: v.dor>0 ? v.dorLocal : null,
+        fc: fc ? Math.round(fc) : null, ritmo: ritmo || null, notas: $('rn_notas').value.trim() || null,
+        completo: base.completo, aposPesado: base.aposPesado, seguidos: base.seguidos });
+    } else {
+      if (!v.motivo){ toast('Escolhe o motivo.'); return; }
+      Object.assign(r, { motivo: v.motivo, notas: $('rn_notas').value.trim() || null });
+    }
+    if (!DB.run.startMonday) DB.run.startMonday = mondayOf(date);
+    const i = DB.runs.findIndex(x => x.id === r.id); if (i >= 0) DB.runs[i] = r; else DB.runs.push(r);
+    if (done){ dayW(date).type = 'treino'; }
+    save(); closeSheet(); render();
+    if (done && painPair() && mondayOf(painPair().date) === mondayOf(today())) toast('Dor no mesmo sítio 2× seguidas: pára a corrida esta semana.');
+    else toast(done ? 'Sessão registada. Boa!' : 'Registado.');
+  },
+  delRun(){ const id = SHEET.base.id; DB.runs = DB.runs.filter(r => r.id !== id); save(); closeSheet(); render(); toast('Sessão apagada'); },
+  addWalk(){ DB.walks.push({id:'w'+Date.now(), date:today(), min:30}); save(); render(); toast('Caminhada registada (não conta para o plano).'); },
+  delWalk(el){ DB.walks = DB.walks.filter(w => w.id !== el.dataset.v); save(); render(); },
+  /* -------- semana / cópias -------- */
+  wk(el){ const n = addDays(WEEK_SEL, Number(el.dataset.v)); if (n > mondayOf(today())) return; WEEK_SEL = n; render(); },
+  async copyRep(){ const txt = buildReport(WEEK_SEL); if (await copyText(txt)) toast('Relatório copiado. Cola no WhatsApp.'); else { document.querySelector('details') && (document.querySelector('details').open = true); toast('Não consegui copiar: seleciona o texto à mão.'); } },
+  async shareRep(){ const txt = buildReport(WEEK_SEL); if (navigator.share){ try { await navigator.share({text: txt}); } catch(e){} } else A.copyRep(); },
+  backup(){ doBackup(); },
+  restore(){ $('fileIn').value = ''; $('fileIn').click(); },
+  restoreGo(){
+    const inc = SHEET.incoming; try { localStorage.setItem(STORE_KEY+'.antes-de-repor', JSON.stringify(DB)); } catch(e){}
+    DB = migrate(inc); save(); closeSheet(); render(); toast('Cópia reposta.');
+  },
+  introOk(){ DB.prefs.introSeen = true; save(); closeSheet(); render(); },
+  timer(el){ timerAction(el.dataset.v); },
+};
+document.addEventListener('click', e => { const el = e.target.closest('[data-a]'); if (!el || el.disabled) return; const f = A[el.dataset.a]; if (f) f(el, e); });
+
+function runForm(base, edit){
+  const st = STEPS[(base.week || DB.run.week)-1];
+  const v = { feita: base.done===false ? 'Não' : (base.done ? 'Sim' : null), esforco: base.esforco, custo: CUSTO[base.custo], dor: base.dor, dorLocal: base.dorLocal, motivo: base.motivo };
+  openSheet(`<h2>${edit?'Editar sessão':'Registar sessão'}</h2>
+    <div class="small muted">Semana ${base.week || DB.run.week}: ${esc(st.txt)}</div>
+    <div class="runctx">
+    <label class="f">Data</label><input class="in" type="date" id="rn_date" value="${base.date||today()}" max="${today()}" min="${edit ? '' : mondayOf(today())}">
+    <label class="f">Fizeste a sessão?</label>${chipRow('feita', ['Sim','Não'], v.feita)}
+    <div id="feitaSim" class="${v.feita==='Sim'?'':'hidden'}">
+      <label class="f">Minutos (total da sessão)</label><input class="in" id="rn_min" inputmode="numeric" value="${base.min ?? Math.round(totalMin(st))}">
+      <label class="f">Esforço (1 = muito fácil · 10 = máximo)</label>${numRow('esforco',1,10,v.esforco)}
+      <label class="f">Como correu?</label>${chipRow('custo', Object.values(CUSTO), v.custo)}
+      <label class="f">Dores (0 nenhuma · 1 ligeira · 2 moderada · 3 forte)</label>${numRow('dor',0,3,v.dor)}
+      <div id="dorwrap" class="${v.dor>0?'':'hidden'}"><label class="f">Onde?</label>${chipRow('dorLocal', DOR_LOCAIS, v.dorLocal)}</div>
+      <div class="kv" style="margin-top:4px"><div style="background:none;padding:0"><label class="f">FC média (opcional)</label><input class="in" id="rn_fc" inputmode="numeric" placeholder="ex.: 150" value="${base.fc||''}"></div>
+      <div style="background:none;padding:0"><label class="f">Ritmo médio (opcional)</label><input class="in" id="rn_ritmo" placeholder="ex.: 7:45" value="${esc(base.ritmo||'')}"></div></div>
+    </div>
+    <div id="feitaNao" class="${v.feita==='Não'?'':'hidden'}"><label class="f">Porquê?</label>${chipRow('motivo', MOTIVOS_CORRIDA, v.motivo)}</div>
+    <label class="f">Notas (opcional)</label><textarea class="in" id="rn_notas" placeholder="Como te sentiste?">${esc(base.notas||'')}</textarea>
+    </div>
+    <div class="btns"><button class="btn" data-a="closeSheet">Cancelar</button><button class="btn run" data-a="runSave">Guardar</button></div>
+    ${edit ? '<button class="btn ghost danger full" style="margin-top:8px" data-a="delRun">Apagar sessão</button>' : ''}`,
+    {vals:v, edit, base});
+}
+
+async function copyText(txt){
+  try { if (navigator.clipboard && window.isSecureContext){ await navigator.clipboard.writeText(txt); return true; } } catch(e){}
+  try { const ta = document.createElement('textarea'); ta.value = txt; ta.setAttribute('readonly',''); ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0, txt.length); const ok = document.execCommand('copy'); ta.remove(); return ok; } catch(e){ return false; }
+}
+async function doBackup(){
+  const payload = JSON.stringify({ app:'o-meu-plano', exportedAt:new Date().toISOString(), version:APP_VERSION, data:DB });
+  const name = `copia-plano-${today()}.json`;
+  let file = null; try { file = new File([payload], name, {type:'application/json'}); } catch(e){}
+  if (file && navigator.canShare && navigator.canShare({files:[file]})){
+    try { await navigator.share({files:[file], title:'Cópia do meu plano'}); markBackup(); return; }
+    catch(e){ if (e && e.name === 'AbortError') return; }
+  }
+  const blob = new Blob([payload], {type:'application/json'}); const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1500);
+  markBackup();
+}
+function markBackup(){ DB.lastBackup = today(); save(); render(); toast('Cópia guardada.'); }
+$('fileIn').addEventListener('change', e => {
+  const f = e.target.files && e.target.files[0]; if (!f) return;
+  const rd = new FileReader();
+  rd.onload = () => {
+    let obj; try { obj = JSON.parse(rd.result); } catch(err){ toast('Este ficheiro não é uma cópia válida.'); return; }
+    const data = obj && obj.data ? obj.data : obj;
+    if (!data || typeof data !== 'object' || !data.days || typeof data.days !== 'object'){ toast('Este ficheiro não é uma cópia desta app.'); return; }
+    const nNew = Object.keys(data.days).length, nCur = Object.keys(DB.days).length;
+    openSheet(`<h2>Repor cópia?</h2><p>A cópia é de <b>${obj.exportedAt ? fmtD(obj.exportedAt.slice(0,10)) : 'data desconhecida'}</b> e tem <b>${nNew}</b> dias e <b>${(data.runs||[]).length}</b> corridas.</p>
+      <p>Vai <b>substituir</b> o que está agora na app (${nCur} dias, ${DB.runs.length} corridas).</p>
+      <div class="btns"><button class="btn" data-a="closeSheet">Cancelar</button><button class="btn primary" data-a="restoreGo">Repor</button></div>`, {incoming:data});
+  };
+  rd.readAsText(f);
+});
+
+/* =====================================================================
+   TEMPORIZADOR
+   ===================================================================== */
+let TM = null, AC = null, WL = null;
+function audioInit(){
+  try { if (navigator.audioSession) navigator.audioSession.type = 'transient'; } catch(e){}
+  try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === 'suspended') AC.resume(); } catch(e){ AC = null; }
+}
+function beep(freq, dur, when, vol){
+  if (!AC) return; try {
+    const t = AC.currentTime + (when||0), o = AC.createOscillator(), g = AC.createGain();
+    o.type = 'sine'; o.frequency.value = freq; g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol||0.6, t+0.01); g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
+    o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t+dur+0.05);
+  } catch(e){}
+}
+function say(txt){ try { if (!('speechSynthesis' in window)) return; speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(txt); u.lang = 'pt-PT'; speechSynthesis.speak(u); } catch(e){} }
+function vib(p){ try { navigator.vibrate && navigator.vibrate(p); } catch(e){} }
+const speakMin = sec => { const m = Math.floor(sec/60), s = sec%60; const mm = m===1 ? '1 minuto' : m+' minutos'; if (!m) return s+' segundos'; return s===30 ? (m===1?'1 minuto e meio':m+' minutos e meio') : (s ? mm+' e '+s+' segundos' : mm); };
+async function wakeOn(){ try { if ('wakeLock' in navigator){ WL = await navigator.wakeLock.request('screen'); } } catch(e){ WL = null; } }
+function wakeOff(){ try { WL && WL.release(); } catch(e){} WL = null; }
+
+function startTimer(flags){
+  const st = curStep();
+  const segs = [{k:'w', sec:300, label:'Aquecimento — anda'}];
+  st.seg.forEach(([k,m]) => segs.push({k, sec:Math.round(m*60), label: k==='r' ? 'Corre' : 'Anda'}));
+  segs.push({k:'w', sec:300, label:'Retorno à calma — anda'});
+  let acc = 0; segs.forEach(s => { s.start = acc; acc += s.sec; s.end = acc; });
+  const nRun = segs.filter(s => s.k==='r').length; let ri = 0; segs.forEach(s => { if (s.k==='r') s.n = ++ri; });
+  TM = { segs, total:acc, nRun, t0:Date.now(), pausedAt:null, pausedTotal:0, idx:-1, lastCount:null, flags:flags||{}, week:DB.run.week };
+  if (!DB.run.startMonday){ DB.run.startMonday = mondayOf(today()); save(); }
+  audioInit(); beep(660, .12, 0, .4); wakeOn();
+  buildTimerDOM(); $('timer').classList.add('on'); document.body.style.overflow = 'hidden';
+  TM.int = setInterval(tick, 250); tick();
+}
+const tElapsed = () => Math.max(0, ((TM.pausedAt ?? Date.now()) - TM.t0 - TM.pausedTotal) / 1000 * SPEED);
+function cue(s){
+  if (s.k === 'r'){ beep(988,.16,0); beep(988,.16,.25); beep(1319,.35,.5); vib([200,100,200,100,400]); say('Corre devagar, '+speakMin(s.sec)); }
+  else { beep(523,.7,0); vib([700]); say(s.label.replace(' — ',', ')+', '+speakMin(s.sec)); }
+}
+function tick(){
+  if (!TM) return;
+  const e = tElapsed();
+  if (e >= TM.total){ finishTimer(true); return; }
+  const i = TM.segs.findIndex(s => e < s.end);
+  if (i !== TM.idx){ TM.idx = i; TM.lastCount = null; cue(TM.segs[i]); }
+  const s = TM.segs[i], left = s.end - e, c = Math.ceil(left);
+  if (i < TM.segs.length-1 && c <= 3 && c >= 1 && TM.lastCount !== c){ TM.lastCount = c; beep(880, .08, 0, .35); }
+  drawTimer(e);
+}
+function buildTimerDOM(){
+  $('timer').innerHTML = `<div class="row between"><span class="small muted" id="tm_w"></span><span class="small muted" id="tm_rest"></span></div>
+    <div class="bar run" style="margin-top:6px"><i id="tm_bar" style="width:0%"></i></div>
+    <div class="phase" id="tm_phase"></div>
+    <div class="clock" id="tm_clock"></div>
+    <div class="info" id="tm_info"></div>
+    <div class="info" style="margin-top:6px" id="tm_next"></div>
+    <div class="tip" id="tm_tip"></div>
+    <div class="tip hidden" id="tm_paused" style="font-weight:700">Em pausa</div>
+    <div class="grow"></div>
+    <div class="tiny muted" style="text-align:center;margin-bottom:8px">Mantém o ecrã ligado durante a sessão.</div>
+    <div class="ctl"><button class="btn" data-a="timer" data-v="pause" id="tm_pause">Ⅱ Pausa</button>
+    <button class="btn" data-a="timer" data-v="skip">Saltar ›</button>
+    <button class="btn danger" data-a="timer" data-v="stop">Terminar</button></div>`;
+}
+const setT = (id, t) => { const el = $(id); if (el && el.textContent !== t) el.textContent = t; };
+function drawTimer(e){
+  const s = TM.segs[TM.idx], nx = TM.segs[TM.idx+1], left = s.end - e;
+  const el = $('timer'); el.classList.toggle('r', s.k==='r'); el.classList.toggle('w', s.k==='w');
+  setT('tm_w', 'Semana '+TM.week+' · '+STEPS[TM.week-1].txt);
+  setT('tm_rest', mmss(TM.total - e)+' restantes');
+  $('tm_bar').style.width = Math.min(100, e/TM.total*100)+'%';
+  setT('tm_phase', s.k==='r' ? 'CORRE' : (TM.idx===0 ? 'AQUECE' : (TM.idx===TM.segs.length-1 ? 'ACALMA' : 'ANDA')));
+  setT('tm_clock', mmss(left));
+  setT('tm_info', s.k==='r' ? `Corrida ${s.n} de ${TM.nRun}` : s.label);
+  setT('tm_next', nx ? 'A seguir: '+(nx.k==='r'?'correr ':'andar ')+minTxt(nx.sec/60) : 'Último bloco');
+  const st = STEPS[TM.week-1];
+  setT('tm_tip', s.k==='r' ? `Fácil · esforço ${st.esf}/10. Tens de conseguir dizer frases completas; se só sai uma palavra, abranda.`
+    : TM.idx===0 ? 'Começa a passo normal e acelera nos últimos 2′ até andares rápido.'
+    : TM.idx===TM.segs.length-1 ? 'Abranda aos poucos até um passo calmo.'
+    : 'Passo vivo, sem parar. Recupera o fôlego para o próximo bloco.');
+  $('tm_paused').classList.toggle('hidden', !TM.pausedAt);
+  setT('tm_pause', TM.pausedAt ? '▶ Retomar' : 'Ⅱ Pausa');
+}
+function timerAction(v){
+  if (!TM) return;
+  if (v === 'pause'){ if (TM.pausedAt){ TM.pausedTotal += Date.now() - TM.pausedAt; TM.pausedAt = null; audioInit(); wakeOn(); } else { TM.pausedAt = Date.now(); try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch(e){} } tick(); }
+  else if (v === 'skip'){ const e = tElapsed(), s = TM.segs[TM.idx]; TM.t0 -= (s.end - e) / SPEED * 1000 + 50; tick(); }
+  else if (v === 'stop'){
+    openSheet(`<h2>Terminar a sessão?</h2><p>Faltam ${mmss(TM.total - tElapsed())}. Podes registar o que fizeste.</p>
+      <div class="btns"><button class="btn" data-a="closeSheet">Continuar</button><button class="btn danger" data-a="timer" data-v="stopGo">Terminar</button></div>`);
+  }
+  else if (v === 'stopGo'){ closeSheet(); finishTimer(false); }
+}
+function finishTimer(complete){
+  if (!TM) return;
+  const e = Math.min(tElapsed(), TM.total); clearInterval(TM.int); wakeOff();
+  if (complete){ beep(784,.2,0); beep(988,.2,.22); beep(1319,.5,.44); vib([300,100,300]); say('Sessão terminada. Muito bem!'); }
+  const base = { done:true, min: Math.max(1, Math.round(e/60)), completo: complete, aposPesado: TM.flags.aposPesado, seguidos: TM.flags.seguidos, week: TM.week };
+  TM = null; $('timer').classList.remove('on','r','w'); $('timer').innerHTML = ''; document.body.style.overflow = '';
+  render(); runForm(base);
+}
+document.addEventListener('visibilitychange', () => { if (TM && document.visibilityState === 'visible'){ if (!TM.pausedAt) wakeOn(); tick(); } });
+
+/* ---------- arranque ---------- */
+render();
+if (!DB.prefs.introSeen){
+  openSheet(`<h2>Bem-vinda 👋</h2>
+    <p>Aqui registas a alimentação, o check-in da manhã e as corridas. Tudo fica guardado <b>só neste telemóvel</b>.</p>
+    <ul class="small" style="padding-left:20px">
+      <li><b>Primeiro instala a app</b> no ecrã principal (no separador Plano explico como) e usa-a sempre pelo ícone.</li>
+      <li>Avisa o teu treinador que vais começar a correr 2× por semana.</li>
+      <li>Guarda uma cópia dos dados 1× por semana (separador Semana).</li>
+      <li>Ao domingo, copia o relatório da semana e manda-o por WhatsApp.</li></ul>
+    <div class="btns one"><button class="btn primary" data-a="introOk">Começar</button></div>`);
+}
+</script>
+</body>
+</html>
