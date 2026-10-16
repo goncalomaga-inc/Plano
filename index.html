@@ -170,7 +170,7 @@ details>summary{cursor:pointer;font-weight:600;min-height:44px;display:flex;alig
    Versão e armazenamento — a CHAVE é fixa: nunca mudar entre versões.
    Mudanças de estrutura fazem-se em migrate(), sem apagar dados.
    ===================================================================== */
-const APP_VERSION = '1.1.0';
+const APP_VERSION = '1.2.0';
 const STORE_KEY = 'plano.dados.v1';
 const SCHEMA = 1;
 const SPEED = Math.max(1, Number(new URLSearchParams(location.search).get('speed')) || 1); // só para testes
@@ -281,8 +281,45 @@ const PLANO = {
     ], hort:'100 g feijão-verde ou curgete', notas:['1 g sal'] },
   ]},
 };
+/* Componentes de cada opção: q = quantidade do plano, k = kcal por unidade (g, ml ou un).
+   Servem só para recalcular as kcal quando ela ajusta a quantidade. */
+const CDEF = {
+  pao:{n:'pão massa mãe',u:'g',k:2.39}, tapioca:{n:'tapioca',u:'g',k:2.30},
+  papaia:{n:'papaia',u:'g',k:0.43}, abacaxi:{n:'abacaxi',u:'g',k:0.50}, kiwi:{n:'kiwi gold',u:'g',k:0.63},
+  frango:{n:'peito de frango',u:'g',k:1.19}, peru:{n:'peito de peru',u:'g',k:1.14}, pescada:{n:'pescada',u:'g',k:0.74},
+  robalo:{n:'robalo',u:'g',k:0.97}, dourada:{n:'dourada',u:'g',k:1.10}, linguado:{n:'linguado',u:'g',k:0.86},
+  camarao:{n:'camarão',u:'g',k:0.85}, lulas:{n:'lulas',u:'g',k:0.92}, polvo:{n:'polvo',u:'g',k:0.82}, salmao:{n:'salmão',u:'g',k:2.08},
+  arroz:{n:'arroz basmati',u:'g',k:3.55}, farinha:{n:'farinha de arroz',u:'g',k:3.66}, batata:{n:'batata',u:'g',k:0.77},
+  alpro:{n:'Alpro Coco Natural',u:'g',k:0.78}, whey:{n:'whey isolada',u:'g',k:3.75}, azeite:{n:'azeite',u:'ml',k:8.0},
+};
+const CMULTI = {
+  ovos:[{n:'ovos',n1:'ovo',u:'un',q:2,k:71.5},{n:'claras',n1:'clara',u:'un',q:2,k:17.2}],
+  alpro_whey:[{n:'Alpro Coco Natural',u:'g',q:75,k:0.78},{n:'whey isolada',u:'g',q:10,k:3.75}],
+  bol_comp:[{n:'bolachas de arroz',n1:'bolacha de arroz',u:'un',q:2,k:29},{n:'compota 100% fruta',u:'g',q:15,k:1.6}],
+  bol_mel:[{n:'bolachas de arroz',n1:'bolacha de arroz',u:'un',q:2,k:29},{n:'mel',u:'g',q:10,k:3.04}],
+  banana:[{n:'bananas',n1:'banana',u:'un',q:1,k:105}],
+  choc:[{n:'quadrados de chocolate preto',n1:'quadrado de chocolate preto',u:'un',q:1,k:58}],
+  azeite:[{n:'azeite extra virgem',u:'ml',q:5,k:8.0}],
+};
+function buildComp(o){
+  if (CMULTI[o.id]) return CMULTI[o.id].map(c => ({...c}));
+  const m = o.label.match(/^(\d+(?:[.,]\d+)?)\s*(g|ml)\b/); if (!m) return null;
+  const q = Number(m[1].replace(',','.'));
+  if (o.id.startsWith('f50_')) return [{n:o.label.replace(/^\d+\s*g\s*/,''), u:'g', q, k:50/q}];
+  const d = CDEF[o.id]; return d ? [{n:d.n, u:d.u, q, k:d.k}] : null;
+}
+const fq = q => (Math.round(q*10)/10).toString().replace('.',',');
+const compLabel = comp => comp.map(c => c.u==='un' ? `${fq(c.q)} ${c.q===1 && c.n1 ? c.n1 : c.n}` : `${fq(c.q)} ${c.u} ${c.n}`).join(' + ');
+function adjChoice(o, qs){
+  const comp = o.comp.map((c,i) => ({...c, q:qs[i]}));
+  const delta = Math.round(comp.reduce((s,c,i) => s + (c.q - o.comp[i].q) * c.k, 0));
+  const same = comp.every((c,i) => c.q === o.comp[i].q);
+  if (same) return {id:o.id, label:o.label, kcal:o.kcal};
+  return {id:o.id, label:compLabel(comp), kcal:Math.max(0, o.kcal + delta), adj:true, base:o.label, delta, q:qs.slice()};
+}
 const mealPlanKcal = m => m.groups.reduce((s,g) => s + g.opts[0].kcal, 0);
 const PLAN_KCAL = t => PLANO[t].meals.reduce((s,m) => s + mealPlanKcal(m), 0);
+Object.values(PLANO).forEach(P => P.meals.forEach(m => m.groups.forEach(g => g.opts.forEach(o => { o.comp = buildComp(o); }))));
 
 /* Suplementos (agrupados por momento do dia) */
 const SUPL = {
@@ -347,7 +384,7 @@ let STORAGE_OK = true;
 function defaultData(){
   return { schema:SCHEMA, createdAt:today(), days:{}, runs:[], walks:[],
     run:{ week:1, startMonday:null, evaluatedThrough:null, history:[], completed:false },
-    prefs:{ last:{}, coachAck:false, healthAck:false, introSeen:false },
+    prefs:{ last:{}, lastAdj:{}, coachAck:false, healthAck:false, introSeen:false },
     lastBackup:null };
 }
 function migrate(d){
@@ -490,13 +527,52 @@ function renderHoje(){
       ${runToday(date) ? '<div class="note">Correste hoje, por isso é dia de treino.</div>' : '<div class="note">Treino, corrida ou cardio = dia de treino. Só o dia de descanso total é de descanso.</div>'}
       <div class="row between" style="margin-top:12px"><div><div class="tiny muted">Registado hoje</div><div class="big">${got} <span class="small muted">/ ~${target} kcal</span></div></div>
       <div class="tag ${mealsLogged(date)===plan.meals.length?'ok':''}">${mealsLogged(date)}/${plan.meals.length} refeições</div></div>
-      <div class="bar"><i style="width:${Math.min(100, Math.round(got/target*100))}%"></i></div></div>`;
+      <div class="bar"><i style="width:${Math.min(100, Math.round(got/target*100))}%"></i></div>
+      <div class="note" style="margin-top:6px">${got < target ? `Faltam <b>~${target-got} kcal</b> para o plano.` : (got > target ? `<b>+${got-target} kcal</b> acima do plano.` : 'Exatamente no plano.')}</div></div>`;
   h += checkinCard(date, d);
   plan.meals.forEach(m => h += mealCard(date, type, m, d.meals[m.id]));
   h += extrasCard(date, d);
   h += suplCard(date, d, type);
   h += aguaCard(date, d);
+  h += `<div class="card"><h2>Relatório do dia</h2><div class="small muted">Copia e manda por WhatsApp no fim do dia (ou quando quiseres).</div>
+    <div class="btns"><button class="btn primary" data-a="copyDay" data-v="${date}">Copiar relatório do dia</button><button class="btn" data-a="shareDay" data-v="${date}">Enviar…</button></div>
+    <details><summary>Ver o texto</summary><pre class="rep">${esc(buildDayReport(date))}</pre></details></div>`;
   return h;
+}
+
+/* ---------------- RELATÓRIO DO DIA ---------------- */
+function itemTxt(it, g){
+  if (it.id === 'outro') return `✎ TROCA (${g ? g.nome : 'item'}): ${it.label} (~${it.kcal} kcal) · ${it.motivo||''}`;
+  if (it.adj) return `✎ ${it.label} (plano: ${it.base.replace(/ \(.*\)$/,'')}; ${it.delta>0?'+':''}${it.delta} kcal)`;
+  return it.label.replace(/ \(.*\)$/,'');
+}
+function buildDayReport(date){
+  const d = dayR(date), type = dayType(date), P = PLANO[type], L = [];
+  const dt = parseISO(date), dia = DIAS[dt.getDay()];
+  L.push(`📅 ${dia[0].toUpperCase()+dia.slice(1)}, ${fmtD(date)} · ${P.nome}`);
+  const c = d.checkin;
+  L.push(c ? `⚖️ ${c.peso!=null?f1(c.peso)+' kg':'—'} · 😴 ${c.sono!=null?f1(c.sono)+' h':'—'} · ⚡ ${c.energia??'—'}/5` : '(sem check-in)');
+  L.push('');
+  P.meals.forEach(m => {
+    const r = d.meals[m.id], mn = m.nome.split(' ·')[0];
+    if (!r || !r.status){ L.push(`🍽️ ${mn} — não registada`); return; }
+    if (r.status === 'nao'){ L.push(`🍽️ ${mn} — NÃO COMEU (${r.motivo})`); return; }
+    if (r.status === 'outra'){ L.push(`🍽️ ${mn} — OUTRA COISA: ${r.desc} ~${r.kcal} kcal (${r.motivo})`); return; }
+    L.push(`🍽️ ${mn} — ${r.kcal} kcal`);
+    r.items.forEach(it => L.push('   · ' + itemTxt(it, m.groups.find(x => x.id === it.g))));
+  });
+  (d.extras||[]).forEach((x,i) => { if (!i) L.push('➕ Extras:'); L.push(`   · ${x.desc} ~${x.kcal} kcal (${x.motivo})`); });
+  const got = dayKcal(date), tg = PLAN_KCAL(type);
+  L.push('');
+  L.push(`TOTAL: ${got} kcal · plano ~${tg} · ${got < tg ? 'faltam ~'+(tg-got) : (got > tg ? '+'+(got-tg)+' acima' : 'no plano')} · refeições ${mealsLogged(date)}/${P.meals.length}`);
+  const SL = SUPL[type], ns = SL.filter(x => d.supl && d.supl[x.id]).length;
+  L.push(`💊 Suplementos ${ns}/${SL.length} · 💧 ${f1((d.agua||0)*0.25)} L`);
+  const runs = DB.runs.filter(r => r.date === date), walks = DB.walks.filter(w => w.date === date);
+  runs.forEach(r => L.push(r.done
+    ? `🏃 Corrida: semana ${r.week} · ${r.min||'?'} min${r.completo===false?' (terminou mais cedo)':''} · esforço ${r.esforco??'—'}/10 · ${CUSTO[r.custo]||'—'} · dor ${r.dor||0}${r.dor?' ('+r.dorLocal+')':''}${r.fc?' · FC '+r.fc:''}${r.ritmo?' · '+r.ritmo+'/km':''}${r.notas?' · “'+r.notas+'”':''}`
+    : `🏃 Corrida não feita: ${r.motivo||''}`));
+  walks.forEach(w => L.push(`🚶 Caminhada rápida ${w.min||30}′`));
+  return L.join('\n');
 }
 
 function checkinCard(date, d){
@@ -516,16 +592,24 @@ function choiceFor(date, type, meal, g){
   const key = date+'|'+type+'|'+meal.id;
   const dr = DRAFT[key] && DRAFT[key][g.id];
   if (dr) return dr;
-  const last = DB.prefs.last[type+'.'+meal.id+'.'+g.id];
+  const pk = type+'.'+meal.id+'.'+g.id, last = DB.prefs.last[pk];
   const o = g.opts.find(x => x.id === last) || g.opts[0];
+  const la = (DB.prefs.lastAdj||{})[pk];
+  if (la && la.id === o.id && o.comp && la.q && la.q.length === o.comp.length) return adjChoice(o, la.q);
   return {id:o.id, label:o.label, kcal:o.kcal};
+}
+const shortLab = l => l.replace(/^\d+[,.]?\d* ?(g|ml)? ?/,'').replace(/ \(.*\)$/,'');
+function itemHtml(it){
+  if (it.id === 'outro') return `<b>✎ ${esc(it.label)}</b> (${it.kcal} kcal, ${esc(it.motivo||'')})`;
+  if (it.adj) return `<b>✎ ${esc(it.label)}</b> <span class="muted">(plano: ${esc(it.base.replace(/ \(.*\)$/,''))})</span>`;
+  return esc(shortLab(it.label));
 }
 function mealCard(date, type, meal, rec){
   const key = date+'|'+type+'|'+meal.id;
   if (rec && rec.status && !EDIT.has(key)){
     let body = '', cls = 'done';
     if (rec.status === 'feito'){
-      body = rec.items.map(it => it.id==='outro' ? `<b>✎ ${esc(it.label)}</b> (${it.kcal} kcal, ${esc(it.motivo||'')})` : esc(it.label.replace(/^\d+[,.]?\d* ?(g|ml)? ?/,''))).join(' · ');
+      body = rec.items.map(itemHtml).join(' · ');
     } else if (rec.status === 'nao'){ cls = 'skip'; body = `<b>Não comi</b> · ${esc(rec.motivo)}`; }
     else { cls = 'skip'; body = `<b>Comi outra coisa:</b> ${esc(rec.desc)} · ~${rec.kcal} kcal · ${esc(rec.motivo)}`; }
     return `<div class="card meal ${cls}"><div class="head"><h2>${rec.status==='feito'?'✓ ':''}${esc(meal.nome)}</h2><span class="kc">${rec.status==='nao'?'0':rec.kcal} kcal</span></div>
@@ -539,9 +623,14 @@ function mealCard(date, type, meal, rec){
   meal.groups.forEach((g, gi) => {
     const c = choices[gi];
     h += `<div class="grp">${g.opts.length>1 || c.id==='outro' ? `<div class="gl">${esc(g.nome)}</div>` : ''}<div class="chips">`;
-    g.opts.forEach(o => h += `<button class="chip ${c.id===o.id?'sel':''}" data-a="pickOpt" data-k="${key}" data-g="${g.id}" data-v="${o.id}">${esc(o.label)}<span class="k">${o.kcal}</span></button>`);
+    g.opts.forEach(o => { const a = c.id===o.id && c.adj;
+      h += `<button class="chip ${c.id===o.id?'sel':''}" data-a="pickOpt" data-k="${key}" data-g="${g.id}" data-v="${o.id}">${a?'✎ ':''}${esc(a ? c.label : o.label)}<span class="k">${a ? c.kcal : o.kcal}</span></button>`; });
     if (c.id === 'outro') h += `<button class="chip sel" data-a="swap" data-k="${key}" data-g="${g.id}">✎ ${esc(c.label)}<span class="k">${c.kcal}</span></button>`;
-    else h += `<button class="chip add" data-a="swap" data-k="${key}" data-g="${g.id}">Troquei…</button>`;
+    else {
+      const so = g.opts.find(o => o.id === c.id);
+      if (so && so.comp) h += `<button class="chip add" data-a="qty" data-k="${key}" data-g="${g.id}">± Quantidade</button>`;
+      h += `<button class="chip add" data-a="swap" data-k="${key}" data-g="${g.id}">Troquei…</button>`;
+    }
     h += `</div></div>`;
   });
   const extra = [];
@@ -657,7 +746,8 @@ function renderSemana(){
      <div><div class="l">Corridas</div><div class="v">${S.runs.filter(r=>r.done).length}/2</div></div></div></div>`;
   alertsFor(mon).forEach(a => h += `<div class="banner ${a.lvl}"><b>${esc(a.t)}</b>${esc(a.d)}</div>`);
   const rep = buildReport(mon);
-  h += `<div class="card"><h2>Relatório para enviar</h2><div class="small muted">Copia e manda por WhatsApp.</div>
+  h += `<div class="card"><h2>Relatórios diários</h2><ul class="list">${weekDates(mon).filter(x => x <= today()).map(x => `<li class="row between"><span><b>${fmtDW(x)}</b> · ${dayKcal(x)} kcal · ${mealsLogged(x)}/${PLANO[dayType(x)].meals.length} ref.${runToday(x)?' · 🏃':''}</span><button class="btn" style="min-height:40px;padding:4px 12px" data-a="copyDay" data-v="${x}">Copiar</button></li>`).join('')}</ul></div>`;
+  h += `<div class="card"><h2>Relatório da semana</h2><div class="small muted">Copia e manda por WhatsApp.</div>
      <div class="btns"><button class="btn primary" data-a="copyRep">Copiar relatório</button><button class="btn" data-a="shareRep">Enviar…</button></div>
      <details><summary>Ver o texto</summary><pre class="rep" id="reptext">${esc(rep)}</pre></details></div>`;
   h += `<div class="card"><h2>Cópia de segurança</h2>
@@ -685,7 +775,7 @@ function buildReport(mon){
   const types = S.dates.filter(d => DB.days[d] || runToday(d)).map(dayType);
   L.push(`Tipo de dia: ${types.filter(t=>t==='treino').length} treino · ${types.filter(t=>t==='descanso').length} descanso`);
   // escolhas
-  const cnt = {}, trocas = [], naos = [], outras = [], motivos = {};
+  const cnt = {}, trocas = [], naos = [], outras = [], motivos = {}, ajustes = {};
   S.dates.forEach(date => {
     const d = dayR(date), t = dayType(date);
     PLANO[t].meals.forEach(m => {
@@ -694,8 +784,9 @@ function buildReport(mon){
       if (r.status === 'feito') r.items.forEach(it => {
         const g = m.groups.find(x => x.id === it.g); if (!g) return;
         if (it.id === 'outro'){ trocas.push(`${fmtDW(date)} ${mn}: ${g.nome} → ${it.label} (~${it.kcal} kcal) · ${it.motivo||''}`); motivos[it.motivo] = (motivos[it.motivo]||0)+1; return; }
+        if (it.adj){ const ak = `${mn} — ${it.label} (plano: ${it.base.replace(/ \(.*\)$/,'')}; ${it.delta>0?'+':''}${it.delta} kcal)`; ajustes[ak] = (ajustes[ak]||0)+1; }
         if (g.opts.length < 2) return;
-        const k = mn+' — '+g.nome; cnt[k] = cnt[k] || {}; const lab = it.label.replace(/^[\d,.]+ ?(g|ml)? ?/,'').replace(/ \(.*\)$/,'');
+        const k = mn+' — '+g.nome; cnt[k] = cnt[k] || {}; const lab = shortLab(it.adj ? it.base : it.label);
         cnt[k][lab] = (cnt[k][lab]||0)+1;
       });
       else if (r.status === 'nao'){ naos.push(`${fmtDW(date)} ${mn} · ${r.motivo}`); motivos[r.motivo] = (motivos[r.motivo]||0)+1; }
@@ -705,6 +796,8 @@ function buildReport(mon){
   const ext = []; S.dates.forEach(date => (dayR(date).extras||[]).forEach(x => { ext.push(`${fmtDW(date)}: ${x.desc} (~${x.kcal} kcal) · ${x.motivo}`); motivos[x.motivo] = (motivos[x.motivo]||0)+1; }));
   const ck = Object.keys(cnt);
   if (ck.length){ L.push(`Escolhas:`); ck.forEach(k => L.push(`- ${k}: ${Object.entries(cnt[k]).sort((a,b)=>b[1]-a[1]).map(([l,n])=>`${l} ${n}×`).join(' · ')}`)); }
+  const aj = Object.entries(ajustes);
+  L.push(`Quantidades ajustadas (${aj.reduce((s,a)=>s+a[1],0)})${aj.length?':':''}`); aj.sort((a,b)=>b[1]-a[1]).forEach(([k,n]) => L.push(`- ${k} · ${n}×`));
   L.push(`Trocas (${trocas.length})${trocas.length?':':''}`); trocas.forEach(x => L.push('- '+x));
   L.push(`Não comi (${naos.length})${naos.length?':':''}`); naos.forEach(x => L.push('- '+x));
   L.push(`Comi outra coisa (${outras.length})${outras.length?':':''}`); outras.forEach(x => L.push('- '+x));
@@ -781,6 +874,7 @@ function renderPlano(){
   h += zonesCard();
   h += `<div class="card plantext small"><h2>Sobre as calorias</h2>
     <p>O plano do treinador não traz calorias. Os valores da app são <b>estimativas</b> a partir de rótulos das marcas e tabelas de composição (alimento cru), com uma margem de ±100 kcal por dia.</p>
+    <p>Se comeres mais ou menos de um alimento do plano, usa <b>± Quantidade</b>: as kcal recalculam sozinhas e a app lembra-se da tua quantidade para a próxima vez.</p>
     <p>Tapioca: valor de goma de tapioca hidratada. Chocolate: quadrado de 10 g. Salmão: de aquacultura. Fruta “50 kcal à escolha”: as gramas indicadas dão ~50 kcal.</p></div>`;
   h += `<p class="tiny muted" style="text-align:center">Versão ${APP_VERSION} · os dados ficam só neste telemóvel</p>`;
   return h;
@@ -839,12 +933,41 @@ const A = {
     DRAFT[SHEET.k] = DRAFT[SHEET.k] || {}; DRAFT[SHEET.k][SHEET.g] = {id:'outro', label:desc, kcal:Math.round(kcal), motivo:mot};
     closeSheet(); render();
   },
+  qty(el){
+    const {date, type, meal} = parseKey(el.dataset.k); const g = meal.groups.find(x => x.id === el.dataset.g);
+    const c = choiceFor(date, type, meal, g), o = g.opts.find(x => x.id === c.id); if (!o || !o.comp) return;
+    const qs = c.adj ? c.q : o.comp.map(x => x.q);
+    openSheet(`<h2>Quantidade</h2><div class="small muted">Plano: ${esc(o.label.replace(/ \(.*\)$/,''))} · ${o.kcal} kcal</div>
+      ${o.comp.map((x,i) => `<label class="f">${x.u==='un' ? 'Quantos — '+esc(x.n) : (x.u==='ml'?'Mililitros':'Gramas')+' de '+esc(x.n)} <span class="muted">(plano ${fq(x.q)})</span></label>
+        <input class="in" data-ci="${i}" inputmode="decimal" value="${fq(qs[i])}">`).join('')}
+      <div class="note" id="qtyPrev" style="font-size:18px"></div>
+      <div class="btns"><button class="btn" data-a="qtyReset">Repor o plano</button><button class="btn food" data-a="qtySave">Guardar</button></div>`,
+      {k:el.dataset.k, g:g.id, oid:o.id});
+    const upd = () => { const v = A._qtyVals(); const pv = $('qtyPrev'); if (!pv) return;
+      if (!v){ pv.textContent = 'Confirma os números.'; return; }
+      const ch = adjChoice(o, v); pv.innerHTML = `<b>${ch.kcal} kcal</b> ${ch.adj ? `(${ch.delta>0?'+':''}${ch.delta} vs plano)` : '(igual ao plano)'}`; };
+    document.querySelectorAll('#sheet input[data-ci]').forEach(i => i.addEventListener('input', upd)); upd();
+  },
+  _qtyVals(){ const a = [...document.querySelectorAll('#sheet input[data-ci]')].map(i => num(i.value)); return a.every(x => x != null && x >= 0 && x <= 2000) ? a : null; },
+  qtySave(){
+    const v = A._qtyVals(); if (!v){ toast('Confirma os números.'); return; }
+    const {meal} = parseKey(SHEET.k); const g = meal.groups.find(x => x.id === SHEET.g), o = g.opts.find(x => x.id === SHEET.oid);
+    DRAFT[SHEET.k] = DRAFT[SHEET.k] || {}; DRAFT[SHEET.k][g.id] = adjChoice(o, v); closeSheet(); render();
+  },
+  qtyReset(){
+    const {meal} = parseKey(SHEET.k); const g = meal.groups.find(x => x.id === SHEET.g), o = g.opts.find(x => x.id === SHEET.oid);
+    DRAFT[SHEET.k] = DRAFT[SHEET.k] || {}; DRAFT[SHEET.k][g.id] = {id:o.id, label:o.label, kcal:o.kcal}; closeSheet(); render();
+  },
+  async copyDay(el){ const txt = buildDayReport(el.dataset.v); if (await copyText(txt)) toast('Relatório do dia copiado.'); else toast('Não consegui copiar: abre “Ver o texto” e copia à mão.'); },
+  async shareDay(el){ const txt = buildDayReport(el.dataset.v); if (navigator.share){ try { await navigator.share({text: txt}); } catch(e){} } else A.copyDay(el); },
   mealDone(el){
     const key = el.dataset.k, {date, type, meal} = parseKey(key);
     const items = meal.groups.map(g => Object.assign({g:g.id}, choiceFor(date, type, meal, g)));
     const d = dayW(date); d.meals[meal.id] = { status:'feito', items, kcal: items.reduce((s,x)=>s+x.kcal,0), at: Date.now() };
     if (!DB.days[date].type) d.type = type;
-    items.forEach(it => { if (it.id !== 'outro') DB.prefs.last[type+'.'+meal.id+'.'+it.g] = it.id; });
+    DB.prefs.lastAdj = DB.prefs.lastAdj || {};
+    items.forEach(it => { if (it.id === 'outro') return; const pk = type+'.'+meal.id+'.'+it.g; DB.prefs.last[pk] = it.id;
+      if (it.adj) DB.prefs.lastAdj[pk] = {id:it.id, q:it.q}; else delete DB.prefs.lastAdj[pk]; });
     delete DRAFT[key]; EDIT.delete(key); save(); render(); toast(meal.nome+' registada');
   },
   mealNo(el){
@@ -871,7 +994,7 @@ const A = {
   },
   editMeal(el){
     const key = el.dataset.k, {date, meal} = parseKey(key), r = dayR(date).meals[meal.id];
-    if (r && r.status === 'feito'){ DRAFT[key] = {}; r.items.forEach(it => DRAFT[key][it.g] = {id:it.id, label:it.label, kcal:it.kcal, motivo:it.motivo}); }
+    if (r && r.status === 'feito'){ DRAFT[key] = {}; r.items.forEach(it => DRAFT[key][it.g] = Object.assign({}, it)); }
     EDIT.add(key); render();
   },
   clearMeal(el){ const key = el.dataset.k, {date, meal} = parseKey(key); delete dayW(date).meals[meal.id]; EDIT.delete(key); delete DRAFT[key]; save(); render(); toast('Registo apagado'); },
